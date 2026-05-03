@@ -3,10 +3,10 @@ package models
 import "time"
 
 type Exercise struct {
-    ID       string json:"id"
-    Name     string json:"name"
-    Category string json:"category" // Push, Pull, Legs, etc.
-    Notes    string json:"notes,omitempty"
+    ID       string `json:"id"`
+    Name     string `json:"name"`
+    Category string `json:"category"` // Push, Pull, Legs, etc.
+    Notes    string `json:"notes,omitempty"`
 }
 
 type Set struct {
