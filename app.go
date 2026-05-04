@@ -12,7 +12,11 @@ type App struct {
 }
 
 func NewApp() *App {
-	repo, _ := repository.NewRepository() // handle error properly in real code
+	repo, err := repository.NewRepository()
+	if err != nil {
+		// handle error (for now just panic or log)
+		panic(err)
+	}
 	return &App{repo: repo}
 }
 
@@ -20,13 +24,11 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// Exposed to frontend
-func (a *App) LogSet(exercise models.Exercise, set models.Set) error {
-	// For simplicity, create a quick workout or expand later
-	return nil
+// Example methods you can call from Svelte
+func (a *App) GetExercises() ([]models.Exercise, error) {
+	return a.repo.GetAllExercises()
 }
 
-func (a *App) GetExercises() ([]models.Exercise, error) {
-	// Query and return
-	return nil, nil
+func (a *App) LogSet(ex models.Exercise, s models.Set) error {
+	return a.repo.LogSet(ex, s)
 }
