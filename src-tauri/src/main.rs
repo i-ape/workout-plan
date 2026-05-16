@@ -7,6 +7,7 @@ pub mod commands;
 
 use repository::Repository;
 use std::sync::Mutex;
+use tauri::Manager;
 
 fn main() {
     tauri::Builder::default()
