@@ -1,4 +1,3 @@
-use serde_json;
 use std::fs;
 use std::path::Path;
 use std::sync::Mutex;
@@ -6,23 +5,23 @@ use crate::models::*;
 
 const DATA_FILE: &str = "exercise_data.json";
 
-pub struct Repository {
-    data: Mutex<AppData>,
-}
-
 #[derive(Default, serde::Serialize, serde::Deserialize)]
 pub struct AppData {
     pub exercises: Vec<Exercise>,
     pub workouts: Vec<WorkoutSession>,
 }
 
+pub struct Repository {
+    data: Mutex<AppData>,
+}
+
 impl Repository {
     pub fn new() -> Self {
         let data = if Path::new(DATA_FILE).exists() {
-            match fs::read_to_string(DATA_FILE) {
-                Ok(content) => serde_json::from_str(&content).unwrap_or_default(),
-                Err(_) => AppData::default(),
-            }
+            fs::read_to_string(DATA_FILE)
+                .ok()
+                .and_then(|c| serde_json::from_str(&c).ok())
+                .unwrap_or_default()
         } else {
             AppData::default()
         };
@@ -37,15 +36,14 @@ impl Repository {
         }
     }
 
-    // === Public Methods ===
+    // === Existing methods ===
     pub fn create_exercise(&self, ex: &mut Exercise) -> Result<(), String> {
         if ex.id.is_empty() {
-            ex.id = uuid::Uuid::new_v4().to_string();
+            ex.id = Uuid::new_v4().to_string();
         }
-
         let mut data = self.data.lock().unwrap();
         data.exercises.push(ex.clone());
-        drop(data); // release lock before save
+        drop(data);
         self.save();
         Ok(())
     }
@@ -55,10 +53,42 @@ impl Repository {
         Ok(data.exercises.clone())
     }
 
-    pub fn log_set(&self, exercise: Exercise, set: Set) -> Result<(), String> {
-        // For now: simple implementation - we'll improve this soon
-        println!("Logged set: {} × {}kg", set.reps, set.weight);
-        // TODO: Add to current workout or create new one
+    // === New methods ===
+    pub fn log_set_to_current_workout(&self, exercise: Exercise, set: Set) -> Result<(), String> {
+        let mut data = self.data.lock().unwrap();
+
+        // Get or create today's workout
+        let today = Utc::now().date_naive();
+        let mut workout = data.workouts.iter_mut()
+            .find(|w| w.date.date_naive() == today);
+
+        if workout.is_none() {
+            let new_workout = WorkoutSession::new();
+            data.workouts.push(new_workout);
+            workout = data.workouts.last_mut();
+        }
+
+        let workout = workout.unwrap();
+
+        // Add set to the exercise in the workout
+        if let Some(existing) = workout.exercises.iter_mut()
+            .find(|e| e.exercise.name == exercise.name) 
+        {
+            existing.sets.push(set);
+        } else {
+            workout.exercises.push(LoggedExercise {
+                exercise,
+                sets: vec![set],
+            });
+        }
+
+        drop(data);
+        self.save();
         Ok(())
+    }
+
+    pub fn get_workout_history(&self) -> Result<Vec<WorkoutSession>, String> {
+        let data = self.data.lock().unwrap();
+        Ok(data.workouts.clone())
     }
 }

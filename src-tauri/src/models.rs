@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Exercise {
     pub id: String,
     pub name: String,
@@ -31,12 +31,12 @@ pub struct WorkoutSession {
     pub notes: Option<String>,
 }
 
-impl Default for Exercise {
-    fn default() -> Self {
+impl WorkoutSession {
+    pub fn new() -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
-            name: String::new(),
-            category: "Other".to_string(),
+            date: Utc::now(),
+            exercises: vec![],
             notes: None,
         }
     }
