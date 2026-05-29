@@ -15,14 +15,15 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::get_all_exercises,
             commands::create_exercise,
-            commands::log_set,
+            commands::log_set_to_current_workout,
             commands::get_workout_history,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]
             {
-                let window = app.get_webview_window("main").unwrap();
-                window.open_devtools();
+                if let Some(window) = app.get_webview_window("main") {
+                    window.open_devtools();
+                }
             }
             Ok(())
         })
