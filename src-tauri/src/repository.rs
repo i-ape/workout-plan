@@ -54,7 +54,7 @@ impl Repository {
     }
 
     // === New methods ===
-    pub fn log_set_to_current_workout(&self, exercise: Exercise, set: Set) -> Result<(), String> {
+    pub fn log_set(&self, exercise: Exercise, set: Set) -> Result<(), String> {
         let mut data = self.data.lock().unwrap();
 
         // Get or create today's workout

@@ -13,8 +13,20 @@ interface Set {
     rpe?: number;
 }
 
+interface LoggedExercise {
+    exercise: Exercise;
+    sets: Set[];
+}
+
+interface WorkoutSession {
+    id: string;
+    date: string;
+    exercises: LoggedExercise[];
+    notes?: string;
+}
+
 async function logSet() {
-    const name = (document.getElementById('exercise-name') as HTMLInputElement).value;
+    const name = (document.getElementById('exercise-name') as HTMLInputElement).value.trim();
     const reps = parseInt((document.getElementById('reps') as HTMLInputElement).value);
     const weight = parseFloat((document.getElementById('weight') as HTMLInputElement).value);
 
@@ -33,35 +45,56 @@ async function logSet() {
 
     try {
         await invoke('log_set', { exercise, set });
-        showStatus(Logged ${reps} × ${weight}kg on ${name}!, "green");
+        showStatus(Logged ${reps} × ${weight}kg on ${name}, "green");
+        
+        // Clear input for next set
+        (document.getElementById('exercise-name') as HTMLInputElement).value = '';
     } catch (err) {
         showStatus("Failed to log set", "red");
         console.error(err);
     }
 }
 
-async function loadExercises() {
+async function loadHistory() {
     try {
-        const exercises: Exercise[] = await invoke('get_all_exercises');
-        const list = document.getElementById('exercise-list') as HTMLUListElement;
-        list.innerHTML = '';
+        const history: WorkoutSession[] = await invoke('get_workout_history');
+        const container = document.getElementById('history-list') as HTMLDivElement;
+        container.innerHTML = '';
 
-        exercises.forEach(ex => {
-            const li = document.createElement('li');
-            li.textContent = \( {ex.name} ( \){ex.category});
-            list.appendChild(li);
+        if (history.length === 0) {
+            container.innerHTML = '<p>No workouts yet. Start logging sets!</p>';
+            return;
+        }
+
+        history.forEach(session => {
+            const date = new Date(session.date).toLocaleDateString();
+            const div = document.createElement('div');
+            div.className = 'workout-session';
+            div.innerHTML = 
+                <strong>${date}</strong>
+                <ul>
+                    ${session.exercises.map(ex => 
+                        <li>
+                            ${ex.exercise.name} — 
+                            \( {ex.sets.map(s =>  \){s.reps}×${s.weight}kg).join(', ')}
+                        </li>
+                    ).join('')}
+                </ul>
+            ;
+            container.appendChild(div);
         });
     } catch (err) {
-        showStatus("Failed to load exercises", "red");
+        showStatus("Failed to load history", "red");
+        console.error(err);
     }
 }
 
-function showStatus(message: string, color: string) {
+function showStatus(message: string, color: string = "black") {
     const status = document.getElementById('status') as HTMLParagraphElement;
     status.textContent = message;
     status.style.color = color;
 }
 
-// Event listeners
+// Event Listeners
 document.getElementById('log-btn')!.addEventListener('click', logSet);
-document.getElementById('load-exercises')!.addEventListener('click', loadExercises);
+document.getElementById('load-history')!.addEventListener('click', loadHistory);

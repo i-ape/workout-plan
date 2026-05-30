@@ -20,13 +20,13 @@ pub fn create_exercise(
 }
 
 #[tauri::command]
-pub fn log_set_to_current_workout(
+pub fn log_set(
     state: State<'_, Mutex<Repository>>,
     exercise: Exercise,
     set: Set
 ) -> Result<(), String> {
     let repo = state.lock().map_err(|e| e.to_string())?;
-    repo.log_set_to_current_workout(exercise, set)
+    repo.log_set(exercise, set)
 }
 
 #[tauri::command]
