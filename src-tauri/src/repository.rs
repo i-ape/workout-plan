@@ -39,7 +39,7 @@ impl Repository {
     // === Existing methods ===
     pub fn create_exercise(&self, ex: &mut Exercise) -> Result<(), String> {
         if ex.id.is_empty() {
-            ex.id = Uuid::new_v4().to_string();
+            ex.id = uuid::Uuid::new_v4().to_string();
         }
         let mut data = self.data.lock().unwrap();
         data.exercises.push(ex.clone());
@@ -53,12 +53,12 @@ impl Repository {
         Ok(data.exercises.clone())
     }
 
-    // === New methods ===
+    // === Logging ===
     pub fn log_set(&self, exercise: Exercise, set: Set) -> Result<(), String> {
         let mut data = self.data.lock().unwrap();
 
         // Get or create today's workout
-        let today = Utc::now().date_naive();
+        let today = chrono::Utc::now().date_naive();
         let mut workout = data.workouts.iter_mut()
             .find(|w| w.date.date_naive() == today);
 
@@ -70,9 +70,9 @@ impl Repository {
 
         let workout = workout.unwrap();
 
-        // Add set to the exercise in the workout
+        // Add or update exercise in the workout
         if let Some(existing) = workout.exercises.iter_mut()
-            .find(|e| e.exercise.name == exercise.name) 
+            .find(|e| e.exercise.name.to_lowercase() == exercise.name.to_lowercase()) 
         {
             existing.sets.push(set);
         } else {
