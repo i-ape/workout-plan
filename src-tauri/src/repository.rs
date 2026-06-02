@@ -25,7 +25,6 @@ impl Repository {
         } else {
             AppData::default()
         };
-
         Repository { data: Mutex::new(data) }
     }
 
@@ -51,6 +50,18 @@ impl Repository {
     pub fn get_all_exercises(&self) -> Result<Vec<Exercise>, String> {
         let data = self.data.lock().unwrap();
         Ok(data.exercises.clone())
+    }
+
+     // === Current Workout ===
+    pub fn get_current_workout(&self) -> Result<Option<WorkoutSession>, String> {
+        let data = self.data.lock().unwrap();
+        let today = chrono::Utc::now().date_naive();
+
+        let current = data.workouts.iter()
+            .find(|w| w.date.date_naive() == today)
+            .cloned();
+
+        Ok(current)
     }
 
     // === Logging ===
@@ -91,4 +102,5 @@ impl Repository {
         let data = self.data.lock().unwrap();
         Ok(data.workouts.clone())
     }
+   
 }

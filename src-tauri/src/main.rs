@@ -16,6 +16,7 @@ fn main() {
             commands::get_all_exercises,
             commands::create_exercise,
             commands::log_set,
+            commands::get_current_workout,
             commands::get_workout_history,
         ])
         .setup(|app| {

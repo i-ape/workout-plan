@@ -30,6 +30,12 @@ pub fn log_set(
 }
 
 #[tauri::command]
+pub fn get_current_workout(state: State<'_, Mutex<Repository>>) -> Result<Option<WorkoutSession>, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.get_current_workout()
+}
+
+#[tauri::command]
 pub fn get_workout_history(state: State<'_, Mutex<Repository>>) -> Result<Vec<WorkoutSession>, String> {
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.get_workout_history()
