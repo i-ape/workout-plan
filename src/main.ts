@@ -45,12 +45,38 @@ async function logSet() {
 
     try {
         await invoke('log_set', { exercise, set });
-        showStatus(Logged ${reps} × ${weight}kg on ${name}, "green");
+        showStatus(`Logged ${reps} × ${weight}kg on ${name}`, "green");
         
-        // Clear input for next set
         (document.getElementById('exercise-name') as HTMLInputElement).value = '';
+        loadCurrentWorkout(); // Refresh current workout
     } catch (err) {
         showStatus("Failed to log set", "red");
+    }
+}
+
+async function loadCurrentWorkout() {
+    try {
+        const workout: WorkoutSession | null = await invoke('get_current_workout');
+        const container = document.getElementById('current-workout') as HTMLDivElement;
+        
+        if (!workout || workout.exercises.length === 0) {
+            container.innerHTML = '<p>No sets logged today yet.</p>';
+            return;
+        }
+
+        let html = `<p><strong>${new Date(workout.date).toLocaleDateString()}</strong></p><ul>`;
+        
+        workout.exercises.forEach(ex => {
+            html += 
+                `<li>
+                    <strong>${ex.exercise.name}</strong><br>`;
+                    \( {ex.sets.map(s =>  \){s.reps} × ${s.weight}kg).join(' | ')}
+                </li>;
+        });
+        
+        html += '</ul>';
+        container.innerHTML = html;
+    } catch (err) {
         console.error(err);
     }
 }
@@ -62,30 +88,19 @@ async function loadHistory() {
         container.innerHTML = '';
 
         if (history.length === 0) {
-            container.innerHTML = '<p>No workouts yet. Start logging sets!</p>';
+            container.innerHTML = '<p>No past workouts yet.</p>';
             return;
         }
 
         history.forEach(session => {
-            const date = new Date(session.date).toLocaleDateString();
             const div = document.createElement('div');
             div.className = 'workout-session';
-            div.innerHTML = 
-                <strong>${date}</strong>
-                <ul>
-                    ${session.exercises.map(ex => 
-                        <li>
-                            ${ex.exercise.name} — 
-                            \( {ex.sets.map(s =>  \){s.reps}×${s.weight}kg).join(', ')}
-                        </li>
-                    ).join('')}
-                </ul>
-            ;
+            const date = new Date(session.date).toLocaleDateString();
+            div.innerHTML = `<strong>${date}</strong> - ${session.exercises.length} exercises`;
             container.appendChild(div);
         });
     } catch (err) {
         showStatus("Failed to load history", "red");
-        console.error(err);
     }
 }
 
@@ -94,6 +109,9 @@ function showStatus(message: string, color: string = "black") {
     status.textContent = message;
     status.style.color = color;
 }
+
+// Load current workout when app starts
+loadCurrentWorkout();
 
 // Event Listeners
 document.getElementById('log-btn')!.addEventListener('click', logSet);
