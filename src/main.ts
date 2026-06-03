@@ -1,37 +1,38 @@
 import { invoke } from '@tauri-apps/api/core';
 
+// ==================== DATA TYPES ====================
 interface Exercise {
     id: string;
     name: string;
     category: string;
-    notes?: string;
 }
 
 interface Set {
     reps: number;
     weight: number;
-    rpe?: number;
-}
-
-interface LoggedExercise {
-    exercise: Exercise;
-    sets: Set[];
 }
 
 interface WorkoutSession {
     id: string;
     date: string;
-    exercises: LoggedExercise[];
-    notes?: string;
+    exercises: Array<{
+        exercise: Exercise;
+        sets: Set[];
+    }>;
 }
 
+// ==================== MAIN FUNCTIONS ====================
+
+// Log a new set
 async function logSet() {
-    const name = (document.getElementById('exercise-name') as HTMLInputElement).value.trim();
-    const reps = parseInt((document.getElementById('reps') as HTMLInputElement).value);
-    const weight = parseFloat((document.getElementById('weight') as HTMLInputElement).value);
+    const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
+    const repsInput = document.getElementById('reps') as HTMLInputElement;
+    const weightInput = document.getElementById('weight') as HTMLInputElement;
+
+    const name = nameInput.value.trim();
 
     if (!name) {
-        showStatus("Please enter exercise name", "red");
+        showStatus("Please enter an exercise name", "red");
         return;
     }
 
@@ -41,46 +42,52 @@ async function logSet() {
         category: "Other"
     };
 
-    const set: Set = { reps, weight };
+    const set: Set = {
+        reps: parseInt(repsInput.value),
+        weight: parseFloat(weightInput.value)
+    };
 
     try {
         await invoke('log_set', { exercise, set });
-        showStatus(`Logged ${reps} × ${weight}kg on ${name}`, "green");
+        showStatus(✅ Logged ${set.reps} × ${set.weight}kg on ${name}, "green");
         
-        (document.getElementById('exercise-name') as HTMLInputElement).value = '';
-        loadCurrentWorkout(); // Refresh current workout
-    } catch (err) {
-        showStatus("Failed to log set", "red");
+        nameInput.value = '';           // Clear input
+        loadCurrentWorkout();           // Refresh today's workout
+    } catch (error) {
+        showStatus("❌ Failed to log set", "red");
+        console.error(error);
     }
 }
 
+// Load and display today's workout
 async function loadCurrentWorkout() {
     try {
         const workout: WorkoutSession | null = await invoke('get_current_workout');
         const container = document.getElementById('current-workout') as HTMLDivElement;
-        
+
         if (!workout || workout.exercises.length === 0) {
             container.innerHTML = '<p>No sets logged today yet.</p>';
             return;
         }
 
-        let html = `<p><strong>${new Date(workout.date).toLocaleDateString()}</strong></p><ul>`;
-        
-        workout.exercises.forEach(ex => {
+        let html = `<p><strong>Today - ${new Date(workout.date).toLocaleDateString()}</strong></p><ul>`;
+
+        workout.exercises.forEach(item => {
             html += 
                 `<li>
-                    <strong>${ex.exercise.name}</strong><br>`;
-                    \( {ex.sets.map(s =>  \){s.reps} × ${s.weight}kg).join(' | ')}
+                    <strong>${item.exercise.name}</strong><br>`;
+                    \( {item.sets.map(s =>  \){s.reps} × ${s.weight}kg).join(' | ')}
                 </li>;
         });
-        
+
         html += '</ul>';
         container.innerHTML = html;
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+        console.error("Failed to load current workout:", error);
     }
 }
 
+// Load workout history
 async function loadHistory() {
     try {
         const history: WorkoutSession[] = await invoke('get_workout_history');
@@ -96,23 +103,26 @@ async function loadHistory() {
             const div = document.createElement('div');
             div.className = 'workout-session';
             const date = new Date(session.date).toLocaleDateString();
-            div.innerHTML = `<strong>${date}</strong> - ${session.exercises.length} exercises`;
+            div.innerHTML = <strong>${date}</strong> — ${session.exercises.length} exercises;
             container.appendChild(div);
         });
-    } catch (err) {
+    } catch (error) {
         showStatus("Failed to load history", "red");
     }
 }
 
+// Show status message
 function showStatus(message: string, color: string = "black") {
-    const status = document.getElementById('status') as HTMLParagraphElement;
-    status.textContent = message;
-    status.style.color = color;
+    const statusEl = document.getElementById('status') as HTMLParagraphElement;
+    statusEl.textContent = message;
+    statusEl.style.color = color;
 }
+
+// ==================== INITIALIZE APP ====================
 
 // Load current workout when app starts
 loadCurrentWorkout();
 
-// Event Listeners
+// Button click listeners
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('load-history')!.addEventListener('click', loadHistory);
