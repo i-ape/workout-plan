@@ -49,8 +49,8 @@ async function logSet() {
 
     try {
         await invoke('log_set', { exercise, set });
-        showStatus(✅ Logged ${set.reps} × ${set.weight}kg on ${name}, "green");
-        
+        showStatus(`✅ Logged ${set.reps} × ${set.weight}kg on ${name}`, "green");
+
         nameInput.value = '';           // Clear input
         loadCurrentWorkout();           // Refresh today's workout
     } catch (error) {
@@ -73,11 +73,12 @@ async function loadCurrentWorkout() {
         let html = `<p><strong>Today - ${new Date(workout.date).toLocaleDateString()}</strong></p><ul>`;
 
         workout.exercises.forEach(item => {
-            html += 
-                `<li>
-                    <strong>${item.exercise.name}</strong><br>`;
-                    \( {item.sets.map(s =>  \){s.reps} × ${s.weight}kg).join(' | ')}
-                </li>;
+            const setsText = item.sets.map(s => `${s.reps} × ${s.weight}kg`).join(' | ');
+            html += `
+                <li>
+                    <strong>${item.exercise.name}</strong><br>
+                    ${setsText}
+                </li>`;
         });
 
         html += '</ul>';
@@ -103,7 +104,7 @@ async function loadHistory() {
             const div = document.createElement('div');
             div.className = 'workout-session';
             const date = new Date(session.date).toLocaleDateString();
-            div.innerHTML = <strong>${date}</strong> — ${session.exercises.length} exercises;
+            div.innerHTML = `<strong>${date}</strong> — ${session.exercises.length} exercises`;
             container.appendChild(div);
         });
     } catch (error) {
