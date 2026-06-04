@@ -23,7 +23,6 @@ interface WorkoutSession {
 
 // ==================== MAIN FUNCTIONS ====================
 
-// Log a new set
 async function logSet() {
     const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
     const repsInput = document.getElementById('reps') as HTMLInputElement;
@@ -49,36 +48,34 @@ async function logSet() {
 
     try {
         await invoke('log_set', { exercise, set });
-        showStatus(`✅ Logged ${set.reps} × ${set.weight}kg on ${name}`, "green");
-
-        nameInput.value = '';           // Clear input
-        loadCurrentWorkout();           // Refresh today's workout
+        showStatus(✅ Logged ${set.reps} × ${set.weight}kg on ${name}, "green");
+        
+        nameInput.value = '';
+        loadCurrentWorkout();
     } catch (error) {
         showStatus("❌ Failed to log set", "red");
         console.error(error);
     }
 }
 
-// Load and display today's workout
 async function loadCurrentWorkout() {
     try {
         const workout: WorkoutSession | null = await invoke('get_current_workout');
         const container = document.getElementById('current-workout') as HTMLDivElement;
-
+        
         if (!workout || workout.exercises.length === 0) {
             container.innerHTML = '<p>No sets logged today yet.</p>';
             return;
         }
 
-        let html = `<p><strong>Today - ${new Date(workout.date).toLocaleDateString()}</strong></p><ul>`;
+        let html = <p><strong>Today - ${new Date(workout.date).toLocaleDateString()}</strong></p><ul>;
 
         workout.exercises.forEach(item => {
-            const setsText = item.sets.map(s => `${s.reps} × ${s.weight}kg`).join(' | ');
-            html += `
+            html += 
                 <li>
                     <strong>${item.exercise.name}</strong><br>
-                    ${setsText}
-                </li>`;
+                    \( {item.sets.map(s =>  \){s.reps} × ${s.weight}kg).join(' | ')}
+                </li>;
         });
 
         html += '</ul>';
@@ -88,7 +85,6 @@ async function loadCurrentWorkout() {
     }
 }
 
-// Load workout history
 async function loadHistory() {
     try {
         const history: WorkoutSession[] = await invoke('get_workout_history');
@@ -104,7 +100,7 @@ async function loadHistory() {
             const div = document.createElement('div');
             div.className = 'workout-session';
             const date = new Date(session.date).toLocaleDateString();
-            div.innerHTML = `<strong>${date}</strong> — ${session.exercises.length} exercises`;
+            div.innerHTML = <strong>${date}</strong> — ${session.exercises.length} exercises;
             container.appendChild(div);
         });
     } catch (error) {
@@ -112,18 +108,14 @@ async function loadHistory() {
     }
 }
 
-// Show status message
 function showStatus(message: string, color: string = "black") {
     const statusEl = document.getElementById('status') as HTMLParagraphElement;
     statusEl.textContent = message;
     statusEl.style.color = color;
 }
 
-// ==================== INITIALIZE APP ====================
-
-// Load current workout when app starts
+// ==================== INITIALIZE ====================
 loadCurrentWorkout();
 
-// Button click listeners
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('load-history')!.addEventListener('click', loadHistory);
