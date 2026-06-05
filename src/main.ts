@@ -68,12 +68,12 @@ async function loadCurrentWorkout() {
             return;
         }
 
-        let html = <p><strong>Today - ${new Date(workout.date).toLocaleDateString()}</strong></p><ul>;
+        let html = `<p><strong>Today - ${new Date(workout.date).toLocaleDateString()}</strong></p><ul>`;
 
         workout.exercises.forEach(item => {
             html += 
-                <li>
-                    <strong>${item.exercise.name}</strong><br>
+                `<li>
+                    <strong>${item.exercise.name}</strong><br>`;
                     \( {item.sets.map(s =>  \){s.reps} × ${s.weight}kg).join(' | ')}
                 </li>;
         });
@@ -108,7 +108,7 @@ async function loadHistory() {
     }
 }
 
-function showStatus(message: string, color: string = "black") {
+function showStatus(message: string, color: string = "black", p0: { set: Set; "": any; }, $: any, p1: { set: Set; "": any; }, kg: any, on: any, $: any, p2: { name: string; }, p3: string) {
     const statusEl = document.getElementById('status') as HTMLParagraphElement;
     statusEl.textContent = message;
     statusEl.style.color = color;
