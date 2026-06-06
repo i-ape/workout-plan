@@ -18,6 +18,7 @@ fn main() {
             commands::log_set,
             commands::get_current_workout,
             commands::get_workout_history,
+            commands::calculate_1rm,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

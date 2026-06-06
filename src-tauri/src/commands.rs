@@ -40,3 +40,8 @@ pub fn get_workout_history(state: State<'_, Mutex<Repository>>) -> Result<Vec<Wo
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.get_workout_history()
 }
+
+#[tauri::command]
+pub fn calculate_1rm(weight: f64, reps: i32) -> Result<f64, String> {
+    Ok(crate::calc::Calc::calculate_1rm(weight, reps))
+}
