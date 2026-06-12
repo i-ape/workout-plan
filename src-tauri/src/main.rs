@@ -1,9 +1,9 @@
-// Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-pub mod models;
-pub mod repository;
-pub mod commands;
+mod models;
+mod repository;
+mod commands;
+mod calc;           // Make sure this exists
 
 use repository::Repository;
 use std::sync::Mutex;

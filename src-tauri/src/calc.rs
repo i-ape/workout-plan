@@ -1,8 +1,8 @@
 use crate::models::*;
 
-pub struct CalcLogic;
+pub struct Calc;
 
-impl CalcLogic {
+impl Calclogic {
     /// Calculate estimated 1RM using Epley formula
     pub fn calculate_1rm(weight: f64, reps: i32) -> f64 {
         if reps == 1 {

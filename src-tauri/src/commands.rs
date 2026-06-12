@@ -43,5 +43,5 @@ pub fn get_workout_history(state: State<'_, Mutex<Repository>>) -> Result<Vec<Wo
 
 #[tauri::command]
 pub fn calculate_1rm(weight: f64, reps: i32) -> Result<f64, String> {
-    Ok(crate::calc::Calc::calculate_1rm(weight, reps))
+    Ok(crate::Calc::Calc::calculate_1rm(weight, reps))
 }
