@@ -19,6 +19,8 @@ fn main() {
             commands::get_current_workout,
             commands::get_workout_history,
             commands::calculate_1rm,
+            commands::calculate_volume,
+            commands::find_best_set
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]
