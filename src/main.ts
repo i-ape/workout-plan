@@ -35,12 +35,7 @@ async function logSet() {
         return;
     }
 
-    const exercise: Exercise = {
-        id: "",
-        name: name,
-        category: "Other"
-    };
-
+    const exercise: Exercise = { id: "", name, category: "Other" };
     const set: Set = {
         reps: parseInt(repsInput.value),
         weight: parseFloat(weightInput.value)
@@ -51,18 +46,18 @@ async function logSet() {
         showStatus(✅ Logged ${set.reps} × ${set.weight}kg on ${name}, "green");
         
         nameInput.value = '';
-        loadCurrentWorkout();
+        loadCurrentWorkout();   // Refresh to show calculations
     } catch (error) {
         showStatus("❌ Failed to log set", "red");
-        console.error(error);
     }
 }
 
+// Load today's workout + show 1RM and Volume
 async function loadCurrentWorkout() {
     try {
-        const workout: WorkoutSession | null = await invoke('get_current_workout');
+        const workout = await invoke('get_current_workout') as any;
         const container = document.getElementById('current-workout') as HTMLDivElement;
-        
+
         if (!workout || workout.exercises.length === 0) {
             container.innerHTML = '<p>No sets logged today yet.</p>';
             return;
@@ -70,23 +65,37 @@ async function loadCurrentWorkout() {
 
         let html = <p><strong>Today - ${new Date(workout.date).toLocaleDateString()}</strong></p><ul>;
 
-        workout.exercises.forEach(item => {
-            html += <li>
+        for (const item of workout.exercises) {
+            // Calculate for the last set (most recent)
+            const lastSet = item.sets[item.sets.length - 1];
+            const oneRM = await invoke('calculate_1rm', { 
+                weight: lastSet.weight, 
+                reps: lastSet.reps 
+            });
+            const volume = await invoke('calculate_volume', { 
+                weight: lastSet.weight, 
+                reps: lastSet.reps 
+            });
+
+            html += 
+                <li>
                     <strong>${item.exercise.name}</strong><br>
-                    \( {item.sets.map(s =>  \){s.reps} × ${s.weight}kg).join(' | ')}
+                    \( {item.sets.map(s =>  \){s.reps}×${s.weight}kg).join(' | ')}
+                    <br>
+                    <small>Est. 1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg</small>
                 </li>;
-        });
+        }
 
         html += '</ul>';
         container.innerHTML = html;
     } catch (error) {
-        console.error("Failed to load current workout:", error);
+        console.error(error);
     }
 }
 
 async function loadHistory() {
     try {
-        const history: WorkoutSession[] = await invoke('get_workout_history');
+        const history = await invoke('get_workout_history') as any[];
         const container = document.getElementById('history-list') as HTMLDivElement;
         container.innerHTML = '';
 
