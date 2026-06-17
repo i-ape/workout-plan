@@ -43,7 +43,7 @@ async function logSet() {
 
     try {
         await invoke('log_set', { exercise, set });
-        showStatus(✅ Logged ${set.reps} × ${set.weight}kg on ${name}, "green");
+        showStatus(`✅ Logged ${set.reps} × ${set.weight}kg on ${name}`, "green");
         
         nameInput.value = '';
         loadCurrentWorkout();
@@ -63,26 +63,26 @@ async function loadCurrentWorkout() {
             return;
         }
 
-        let html = <p><strong>Today - ${new Date(workout.date).toLocaleDateString()}</strong></p><ul>;
+        let html = `<p><strong>Today - ${new Date(workout.date).toLocaleDateString()}</strong></p><ul>`;
 
         for (const item of workout.exercises) {
             const lastSet = item.sets[item.sets.length - 1];
-            const oneRM = await invoke('calculate_1rm', { 
-                weight: lastSet.weight, 
-                reps: lastSet.reps 
-            });
-            const volume = await invoke('calculate_volume', { 
-                weight: lastSet.weight, 
-                reps: lastSet.reps 
-            });
+            const oneRM = await invoke('calculate_1rm', {
+                weight: lastSet.weight,
+                reps: lastSet.reps
+            }) as number;
+            const volume = await invoke('calculate_volume', {
+                weight: lastSet.weight,
+                reps: lastSet.reps
+            }) as number;
 
-            html += 
-                <li>
+            const setsText = item.sets.map((s: { reps: any; weight: any; }) => `${s.reps}×${s.weight}kg`).join(' | ');
+
+            html += `<li>
                     <strong>${item.exercise.name}</strong><br>
-                    \( {item.sets.map(s =>  \){s.reps}×${s.weight}kg).join(' | ')}
-                    <br>
+                    ${setsText}<br>
                     <small>Est. 1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg</small>
-                </li>;
+                </li>`;
         }
 
         html += '</ul>';
@@ -103,11 +103,11 @@ async function loadHistory() {
             return;
         }
 
-        history.forEach(session => {
+        history.forEach((session: any) => {
             const div = document.createElement('div');
             div.className = 'workout-session';
             const date = new Date(session.date).toLocaleDateString();
-            div.innerHTML = <strong>${date}</strong> — ${session.exercises.length} exercises;
+            div.innerHTML = `<strong>${date}</strong> — ${session.exercises.length} exercises`;
             container.appendChild(div);
         });
     } catch (error) {
@@ -117,6 +117,7 @@ async function loadHistory() {
 
 function showStatus(message: string, color: string = "black") {
     const statusEl = document.getElementById('status') as HTMLParagraphElement;
+    if (!statusEl) return;
     statusEl.textContent = message;
     statusEl.style.color = color;
 }
