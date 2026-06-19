@@ -2,50 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles */
 body {
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #09090b;
+    color: #f4f4f5;
 }
 
 .container {
-    @apply max-w-lg mx-auto p-6;
+    max-width: 32rem; /* \~512px - nice for a workout app */
+    margin-left: auto;
+    margin-right: auto;
 }
 
+/* Section cards */
 .section {
-    @apply bg-zinc-900 border border-zinc-700 rounded-2xl p-6 mb-8;
+    @apply bg-zinc-900 border border-zinc-700 rounded-3xl p-6 mb-8 shadow-xl;
 }
 
+/* Headings */
 h1 {
-    @apply text-3xl font-bold text-center mb-8 text-white;
+    @apply text-4xl font-bold text-center mb-10 tracking-tight;
 }
 
 h2 {
-    @apply text-xl font-semibold mb-4 text-zinc-100;
+    @apply text-2xl font-semibold mb-6 text-zinc-100;
 }
 
-.form-group {
-    @apply mb-4;
+/* Form inputs */
+input[type="text"],
+input[type="number"] {
+    @apply w-full bg-zinc-950 border border-zinc-700 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors;
 }
 
-.form-group label {
-    @apply block text-sm text-zinc-400 mb-1;
-}
-
-.form-group input {
-    @apply w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500;
-}
-
-.form-row {
-    @apply grid grid-cols-2 gap-4;
-}
-
+/* Buttons */
 button {
-    @apply w-full bg-blue-600 hover:bg-blue-500 transition-colors text-white font-medium py-4 rounded-2xl text-lg mt-2;
+    @apply w-full font-semibold py-4 rounded-2xl text-lg transition-all active:scale-95;
 }
 
+#log-btn {
+    @apply bg-emerald-600 hover:bg-emerald-500 text-white;
+}
+
+/* History items */
 .workout-session {
-    @apply bg-zinc-800 border border-zinc-700 rounded-xl p-4 mb-3;
+    @apply bg-zinc-900 border border-zinc-700 rounded-2xl p-5;
 }
 
+/* Status message */
 #status {
-    @apply text-center mt-4 font-medium;
+    @apply text-center mt-6 font-medium min-h-[1.5rem];
+}
+
+/* Small text for 1RM / Volume */
+small {
+    @apply text-zinc-400 text-sm;
+}
+
+/* Make the app feel more premium */
+input:focus {
+    @apply border-emerald-500;
 }
