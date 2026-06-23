@@ -21,7 +21,9 @@ interface WorkoutSession {
     }>;
 }
 
-// ==================== MAIN FUNCTIONS ====================
+// Variables for rest timer
+let restInterval: number | null = null;
+let timeLeft = 90;
 
 async function logSet() {
     const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
@@ -49,7 +51,6 @@ async function logSet() {
         loadCurrentWorkout();
     } catch (error) {
         showStatus("❌ Failed to log set", "red");
-        console.error(error);
     }
 }
 
@@ -67,63 +68,57 @@ async function loadCurrentWorkout() {
 
         for (const item of workout.exercises) {
             const lastSet = item.sets[item.sets.length - 1];
-            const oneRM = await invoke('calculate_1rm', {
-                weight: lastSet.weight,
-                reps: lastSet.reps
-            }) as number;
-            const volume = await invoke('calculate_volume', {
-                weight: lastSet.weight,
-                reps: lastSet.reps
-            }) as number;
+            const oneRM = await invoke('calculate_1rm', { weight: lastSet.weight, reps: lastSet.reps });
 
-            const setsText = item.sets.map((s: { reps: any; weight: any; }) => `${s.reps}×${s.weight}kg`).join(' | ');
-
-            html += `<li>
+            html += `
+                <li class="workout-session">
                     <strong>${item.exercise.name}</strong><br>
-                    ${setsText}<br>
-                    <small>Est. 1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg</small>
+                    ${item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ')}
+                    <br>
+                    <small class="text-emerald-400">Est. 1RM: ${oneRM.toFixed(1)}kg</small>
                 </li>`;
         }
 
         html += '</ul>';
         container.innerHTML = html;
     } catch (error) {
-        console.error("Failed to load current workout:", error);
+        console.error(error);
     }
 }
 
-async function loadHistory() {
-    try {
-        const history = await invoke('get_workout_history') as any[];
-        const container = document.getElementById('history-list') as HTMLDivElement;
-        container.innerHTML = '';
+function loadHistory() {
+    showStatus('Load history not implemented yet.', 'black');
+}
 
-        if (history.length === 0) {
-            container.innerHTML = '<p>No past workouts yet.</p>';
-            return;
+// Rest Timer
+function startRestTimer() {
+    if (restInterval) clearInterval(restInterval);
+    
+    timeLeft = 90;
+    const btn = document.getElementById('rest-btn') as HTMLButtonElement;
+    
+    restInterval = setInterval(() => {
+        timeLeft--;
+        btn.textContent = `Rest: ${timeLeft}s`;
+        
+        if (timeLeft <= 0) {
+            clearInterval(restInterval!);
+            btn.textContent = "Start Rest Timer (90s)";
+            showStatus("Rest time over! Next set ready", "green");
         }
-
-        history.forEach((session: any) => {
-            const div = document.createElement('div');
-            div.className = 'workout-session';
-            const date = new Date(session.date).toLocaleDateString();
-            div.innerHTML = `<strong>${date}</strong> — ${session.exercises.length} exercises`;
-            container.appendChild(div);
-        });
-    } catch (error) {
-        showStatus("Failed to load history", "red");
-    }
+    }, 1000);
 }
 
+// Show status
 function showStatus(message: string, color: string = "black") {
     const statusEl = document.getElementById('status') as HTMLParagraphElement;
-    if (!statusEl) return;
     statusEl.textContent = message;
     statusEl.style.color = color;
 }
 
-// ==================== INITIALIZE ====================
+// Initialize
 loadCurrentWorkout();
 
 document.getElementById('log-btn')!.addEventListener('click', logSet);
-document.getElementById('load-history')!.addEventListener('click', loadHistory);
+document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
+document.getElementById('load-history')!.addEventListener('click', loadHistory); // assume you have loadHistory too
