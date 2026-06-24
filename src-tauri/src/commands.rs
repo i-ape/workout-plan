@@ -1,5 +1,5 @@
 use crate::models::*;
-use crate::calc::*;
+use crate::Calc::*;
 use crate::repository::Repository;
 use tauri::State;
 use std::sync::Mutex;
@@ -44,15 +44,15 @@ pub fn get_workout_history(state: State<'_, Mutex<Repository>>) -> Result<Vec<Wo
 
 #[tauri::command]
 pub fn calculate_1rm(weight: f64, reps: i32) -> Result<f64, String> {
-    Ok(crate::calc::Calc::calculate_1rm(weight, reps))
+    Ok(calculate(weight, reps))
 }
 
 #[tauri::command]
 pub fn calculate_volume(weight: f64, reps: i32) -> Result<f64, String> {
-    Ok(crate::calc::Calc::calculate_volume(weight, reps))
+    Ok(weight * reps as f64)
 }
 
 #[tauri::command]
 pub fn find_best_set(sets: Vec<Set>) -> Result<Option<Set>, String> {
-    Ok(crate::calc::Calc::find_best_set(&sets).cloned())
+    Ok(crate::calc::find_best_set(&sets).cloned())
 }

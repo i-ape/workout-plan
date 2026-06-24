@@ -56,7 +56,7 @@ async function logSet() {
 
 async function loadCurrentWorkout() {
     try {
-        const workout = await invoke('get_current_workout') as any;
+        const workout = await invoke('get_current_workout') as WorkoutSession;
         const container = document.getElementById('current-workout') as HTMLDivElement;
 
         if (!workout || workout.exercises.length === 0) {
@@ -73,7 +73,7 @@ async function loadCurrentWorkout() {
             html += `
                 <li class="workout-session">
                     <strong>${item.exercise.name}</strong><br>
-                    ${item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ')}
+                    ${item.sets.map((s: Set) => `${s.reps}×${s.weight}kg`).join(' | ')}
                     <br>
                     <small class="text-emerald-400">Est. 1RM: ${oneRM.toFixed(1)}kg</small>
                 </li>`;
