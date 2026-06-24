@@ -68,7 +68,7 @@ async function loadCurrentWorkout() {
 
         for (const item of workout.exercises) {
             const lastSet = item.sets[item.sets.length - 1];
-            const oneRM = await invoke('calculate_1rm', { weight: lastSet.weight, reps: lastSet.reps });
+            const oneRM = await invoke<number>('calculate_1rm', { weight: lastSet.weight, reps: lastSet.reps });
 
             html += `
                 <li class="workout-session">
