@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 
-// ==================== DATA TYPES ====================
+// Data Types
 interface Exercise {
     id: string;
     name: string;
@@ -73,10 +73,11 @@ async function loadCurrentWorkout() {
             html += `
                 <li class="workout-session">
                     <strong>${item.exercise.name}</strong><br>
-                    ${item.sets.map((s: Set) => `${s.reps}×${s.weight}kg`).join(' | ')}
+                    ${item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ')}
                     <br>
                     <small class="text-emerald-400">Est. 1RM: ${oneRM.toFixed(1)}kg</small>
-                </li>`;
+                </li>
+            `;
         }
 
         html += '</ul>';
