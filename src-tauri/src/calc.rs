@@ -25,4 +25,18 @@ impl Calc {
                 .unwrap()
         )
     }
+
+    // Calculate total volume for multiple sets
+    pub fn calculate_total_volume(sets: &[Set]) -> f64 {
+        sets.iter().map(|s| s.weight * s.reps as f64).sum()
+    }
+
+    // Find the best set (highest volume)
+    pub fn find_best_set(sets: &[Set]) -> Option<&Set> {
+        sets.iter().max_by(|a, b| 
+            (a.weight * a.reps as f64)
+                .partial_cmp(&(b.weight * b.reps as f64))
+                .unwrap_or(std::cmp::Ordering::Equal)
+        )
+    }
 }
