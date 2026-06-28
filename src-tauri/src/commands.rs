@@ -1,6 +1,6 @@
 use crate::models::*;
-use crate::Calc::*;
 use crate::repository::Repository;
+use crate::calc::Calc;
 use tauri::State;
 use std::sync::Mutex;
 
@@ -42,17 +42,39 @@ pub fn get_workout_history(state: State<'_, Mutex<Repository>>) -> Result<Vec<Wo
     repo.get_workout_history()
 }
 
+// === New Exercise Logic Functions ===
+
 #[tauri::command]
 pub fn calculate_1rm(weight: f64, reps: i32) -> Result<f64, String> {
-    Ok(calculate(weight, reps))
+    Ok(Calc::calculate_1rm(weight, reps))
 }
 
 #[tauri::command]
 pub fn calculate_volume(weight: f64, reps: i32) -> Result<f64, String> {
-    Ok(weight * reps as f64)
+    Ok(Calc::calculate_volume(weight, reps))
+}
+
+#[tauri::command]
+pub fn calculate_total_volume(sets: Vec<Set>) -> Result<f64, String> {
+    Ok(Calc::calculate_total_volume(&sets))
 }
 
 #[tauri::command]
 pub fn find_best_set(sets: Vec<Set>) -> Result<Option<Set>, String> {
-    Ok(crate::calc::find_best_set(&sets).cloned())
+    Ok(Calc::find_best_set(&sets).cloned())
+}
+
+#[tauri::command]
+pub fn get_personal_records(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, Set)>, String> {
+    // Simple implementation - can be expanded
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    let exercises = repo.get_all_exercises()?;
+    let mut records = vec![];
+
+    for ex in exercises {
+        // For now, return a dummy best set - improve later
+        records.push((ex.name, Set { reps: 5, weight: 100.0 }));
+    }
+
+    Ok(records)
 }
