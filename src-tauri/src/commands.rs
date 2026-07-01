@@ -66,14 +66,16 @@ pub fn find_best_set(sets: Vec<Set>) -> Result<Option<Set>, String> {
 
 #[tauri::command]
 pub fn get_personal_records(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, Set)>, String> {
-    // Simple implementation - can be expanded
     let repo = state.lock().map_err(|e| e.to_string())?;
     let exercises = repo.get_all_exercises()?;
     let mut records = vec![];
 
     for ex in exercises {
-        // For now, return a dummy best set - improve later
-        records.push((ex.name, Set { reps: 5, weight: 100.0 }));
+        records.push((ex.name, Set { 
+            reps: 5, 
+            weight: 100.0,
+            rpe: None   // Add this line
+        }));
     }
 
     Ok(records)
