@@ -68,16 +68,19 @@ async function loadCurrentWorkout() {
 
         for (const item of workout.exercises) {
             const lastSet = item.sets[item.sets.length - 1];
-            const oneRM = await invoke<number>('calculate_1rm', { weight: lastSet.weight, reps: lastSet.reps });
+            const oneRM = await invoke('calculate_1rm', { weight: lastSet.weight, reps: lastSet.reps });
+            const volume = await invoke('calculate_volume', { weight: lastSet.weight, reps: lastSet.reps });
 
+            const setsText = item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ');
             html += `
                 <li class="workout-session">
                     <strong>${item.exercise.name}</strong><br>
-                    ${item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ')}
+                    ${setsText}
                     <br>
-                    <small class="text-emerald-400">Est. 1RM: ${oneRM.toFixed(1)}kg</small>
-                </li>
-            `;
+                    <small class="text-emerald-400">
+                        Est. 1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg
+                    </small>
+                </li>`;
         }
 
         html += '</ul>';
@@ -87,9 +90,6 @@ async function loadCurrentWorkout() {
     }
 }
 
-function loadHistory() {
-    showStatus('Load history not implemented yet.', 'black');
-}
 
 // Rest Timer
 function startRestTimer() {
@@ -97,21 +97,42 @@ function startRestTimer() {
     
     timeLeft = 90;
     const btn = document.getElementById('rest-btn') as HTMLButtonElement;
+    btn.textContent = Rest: ${timeLeft}s;
     
     restInterval = setInterval(() => {
         timeLeft--;
-        btn.textContent = `Rest: ${timeLeft}s`;
-        
+        btn.textContent = Rest: ${timeLeft}s;
         if (timeLeft <= 0) {
             clearInterval(restInterval!);
             btn.textContent = "Start Rest Timer (90s)";
-            showStatus("Rest time over! Next set ready", "green");
+            showStatus("✅ Rest finished!", "green");
         }
     }, 1000);
 }
 
-// Show status
-function showStatus(message: string, color: string = "black") {
+async function loadHistory() {
+    try {
+        const history = await invoke('get_workout_history') as any[];
+        const container = document.getElementById('history-list') as HTMLDivElement;
+        container.innerHTML = '';
+
+        if (history.length === 0) {
+            container.innerHTML = '<p>No past workouts yet.</p>';
+            return;
+        }
+
+        history.forEach(session => {
+            const div = document.createElement('div');
+            div.className = 'workout-session';
+            const date = new Date(session.date).toLocaleDateString();
+            div.innerHTML = <strong>${date}</strong> — ${session.exercises.length} exercises;
+            container.appendChild(div);
+        });
+    } catch (error) {
+        showStatus("Failed to load history", "red");
+    }
+}
+function showStatus(message: string, color: string = "white") {
     const statusEl = document.getElementById('status') as HTMLParagraphElement;
     statusEl.textContent = message;
     statusEl.style.color = color;
@@ -122,4 +143,4 @@ loadCurrentWorkout();
 
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
-document.getElementById('load-history')!.addEventListener('click', loadHistory); // assume you have loadHistory too
+document.getElementById('load-history')!.addEventListener('click', loadHistory);
