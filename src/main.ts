@@ -81,7 +81,7 @@ async function loadCurrentWorkout() {
             html += `
                 <li class="workout-session">
                     <strong>${item.exercise.name}</strong><br>
-                    \( {item.sets.map(s => ` \){s.reps}×${s.weight}kg`).join(' | ')}
+                    ${item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ')}
                     <br>
                     <small class="text-emerald-400">
                         Est. 1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg
@@ -149,4 +149,3 @@ loadCurrentWorkout();
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
 document.getElementById('load-history')!.addEventListener('click', loadHistory);
-Try this version and let me know if it works.
