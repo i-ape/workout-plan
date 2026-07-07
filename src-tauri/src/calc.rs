@@ -4,7 +4,7 @@ pub struct Calc;
 
 impl Calc {
     // Existing functions (keep them)
-    pub fn calculate_1rm(weight: f64, reps: i32) -> f64 {
+    pub fn calc_1rm(weight: f64, reps: i32) -> f64 {
         if reps <= 1 {
             weight
         } else {
@@ -12,11 +12,11 @@ impl Calc {
         }
     }
 
-    pub fn calculate_volume(weight: f64, reps: i32) -> f64 {
+    pub fn calc_volume(weight: f64, reps: i32) -> f64 {
         weight * reps as f64
     }
 
-    pub fn calculate_total_volume(sets: &[Set]) -> f64 {
+    pub fn calc_total_volume(sets: &[Set]) -> f64 {
         sets.iter().map(|s| s.weight * s.reps as f64).sum()
     }
 
@@ -31,7 +31,7 @@ impl Calc {
     // === New Functions ===
 
     // Brzycki 1RM formula (alternative to Epley - often more accurate for low reps)
-    pub fn calculate_1rm_brzycki(weight: f64, reps: i32) -> f64 {
+    pub fn calc_1rm_brzycki(weight: f64, reps: i32) -> f64 {
         if reps == 1 {
             weight
         } else {
@@ -40,7 +40,7 @@ impl Calc {
     }
 
     // Estimated Training Max (90% of 1RM - common in programs)
-    pub fn calculate_training_max(one_rm: f64) -> f64 {
+    pub fn calc_training_max(one_rm: f64) -> f64 {
         (one_rm * 0.9).round()
     }
 
@@ -51,7 +51,7 @@ impl Calc {
     }
 
     // Weekly volume trend (simple)
-    pub fn calculate_weekly_volume(volumes: &[f64]) -> f64 {
+    pub fn calc_weekly_volume(volumes: &[f64]) -> f64 {
         if volumes.is_empty() {
             0.0
         } else {

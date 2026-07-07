@@ -42,26 +42,41 @@ pub fn get_workout_history(state: State<'_, Mutex<Repository>>) -> Result<Vec<Wo
     repo.get_workout_history()
 }
 
-// === New Exercise Logic Functions ===
+// === Calculation Commands ===
 
 #[tauri::command]
-pub fn calculate_1rm(weight: f64, reps: i32) -> Result<f64, String> {
-    Ok(Calc::calculate_1rm(weight, reps))
+pub fn calc_1rm(weight: f64, reps: i32) -> Result<f64, String> {
+    Ok(Calc::calc_1rm(weight, reps))
 }
 
 #[tauri::command]
-pub fn calculate_volume(weight: f64, reps: i32) -> Result<f64, String> {
-    Ok(Calc::calculate_volume(weight, reps))
+pub fn calc_volume(weight: f64, reps: i32) -> Result<f64, String> {
+    Ok(Calc::calc_volume(weight, reps))
 }
 
 #[tauri::command]
-pub fn calculate_total_volume(sets: Vec<Set>) -> Result<f64, String> {
-    Ok(Calc::calculate_total_volume(&sets))
+pub fn calc_total_volume(sets: Vec<Set>) -> Result<f64, String> {
+    Ok(Calc::calc_total_volume(&sets))
 }
 
 #[tauri::command]
 pub fn find_best_set(sets: Vec<Set>) -> Result<Option<Set>, String> {
     Ok(Calc::find_best_set(&sets).cloned())
+}
+
+#[tauri::command]
+pub fn calc_1rm_brzycki(weight: f64, reps: i32) -> Result<f64, String> {
+    Ok(Calc::calc_1rm_brzycki(weight, reps))
+}
+
+#[tauri::command]
+pub fn calc_training_max(one_rm: f64) -> Result<f64, String> {
+    Ok(Calc::calc_training_max(one_rm))
+}
+
+#[tauri::command]
+pub fn suggest_weight_for_rpe(one_rm: f64, reps: i32, target_rpe: f64) -> Result<f64, String> {
+    Ok(Calc::suggest_weight_for_rpe(one_rm, reps, target_rpe))
 }
 
 #[tauri::command]
