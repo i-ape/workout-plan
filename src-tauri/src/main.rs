@@ -1,9 +1,10 @@
+// Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod models;
 mod repository;
 mod commands;
-mod calc;           // Make sure this exists
+mod calc;
 
 use repository::Repository;
 use std::sync::Mutex;
@@ -18,9 +19,13 @@ fn main() {
             commands::log_set,
             commands::get_current_workout,
             commands::get_workout_history,
-            commands::calculate_1rm,
-            commands::calculate_volume,
-            commands::find_best_set
+            commands::calc_1rm,              
+            commands::calc_volume,           
+            commands::calc_total_volume,
+            commands::find_best_set,
+            commands::calc_1rm_brzycki,
+            commands::calc_training_max,
+            commands::suggest_weight_for_rpe,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]
