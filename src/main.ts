@@ -51,13 +51,12 @@ async function logSet() {
         loadCurrentWorkout();
     } catch (error) {
         showStatus("❌ Failed to log set", "red");
-        console.error(error);
     }
 }
 
 async function loadCurrentWorkout() {
     try {
-        const workout = await invoke('get_current_workout') as WorkoutSession | null;
+        const workout = await invoke('get_current_workout') as any;
         const container = document.getElementById('current-workout') as HTMLDivElement;
 
         if (!workout || workout.exercises.length === 0) {
@@ -69,24 +68,20 @@ async function loadCurrentWorkout() {
 
         for (const item of workout.exercises) {
             const lastSet = item.sets[item.sets.length - 1];
-            const oneRM = await invoke('calculate_1rm', { 
-                weight: lastSet.weight, 
-                reps: lastSet.reps 
-            }) as number;
-            const volume = await invoke('calculate_volume', { 
-                weight: lastSet.weight, 
-                reps: lastSet.reps 
-            }) as number;
+            const oneRM = await invoke('calc_1rm', { weight: lastSet.weight, reps: lastSet.reps });
+            const volume = await invoke('calc_volume', { weight: lastSet.weight, reps: lastSet.reps });
+            const best = await invoke('find_best_set', { sets: item.sets });
 
-            html += `
-                <li class="workout-session">
-                    <strong>${item.exercise.name}</strong><br>
-                    ${item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ')}
+            html += 
+                `<li class="workout-session">
+                    <strong>${item.exercise.name}</strong><br>`;
+                    \( {item.sets.map(s =>  \){s.reps}×${s.weight}kg).join(' | ')}
                     <br>
                     <small class="text-emerald-400">
-                        Est. 1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg
+                        1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg
+                        ${best ?  | Best: \( {best.reps}× \){best.weight}kg : ''}
                     </small>
-                </li>`;
+                </li>;
         }
 
         html += '</ul>';
@@ -101,11 +96,11 @@ function startRestTimer() {
     
     timeLeft = 90;
     const btn = document.getElementById('rest-btn') as HTMLButtonElement;
-    btn.textContent = `Rest: ${timeLeft}s`;
+    btn.textContent = Rest: ${timeLeft}s;
     
     restInterval = setInterval(() => {
         timeLeft--;
-        btn.textContent = `Rest: ${timeLeft}s`;
+        btn.textContent = Rest: ${timeLeft}s;
         if (timeLeft <= 0) {
             clearInterval(restInterval!);
             btn.textContent = "Start Rest Timer (90s)";
@@ -116,7 +111,7 @@ function startRestTimer() {
 
 async function loadHistory() {
     try {
-        const history = await invoke('get_workout_history') as WorkoutSession[];
+        const history = await invoke('get_workout_history') as any[];
         const container = document.getElementById('history-list') as HTMLDivElement;
         container.innerHTML = '';
 
@@ -127,9 +122,9 @@ async function loadHistory() {
 
         history.forEach(session => {
             const div = document.createElement('div');
-            div.className = 'workout-session';
+[09/07/2026 05:41] code pls: div.className = 'workout-session';
             const date = new Date(session.date).toLocaleDateString();
-            div.innerHTML = `<strong>${date}</strong> — ${session.exercises.length} exercises`;
+            div.innerHTML = <strong>${date}</strong> — ${session.exercises.length} exercises;
             container.appendChild(div);
         });
     } catch (error) {
