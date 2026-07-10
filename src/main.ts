@@ -74,14 +74,14 @@ async function loadCurrentWorkout() {
 
             html += 
                 `<li class="workout-session">
-                    <strong>${item.exercise.name}</strong><br>`;
-                    \( {item.sets.map(s =>  \){s.reps}×${s.weight}kg).join(' | ')}
+                    <strong>${item.exercise.name}</strong><br>
+                    ${item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ')}
                     <br>
                     <small class="text-emerald-400">
                         1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg
-                        ${best ?  | Best: \( {best.reps}× \){best.weight}kg : ''}
+                        ${best ? `| Best: ${best.reps}×${best.weight}kg` : ''}
                     </small>
-                </li>;
+                </li>`;
         }
 
         html += '</ul>';
@@ -96,11 +96,11 @@ function startRestTimer() {
     
     timeLeft = 90;
     const btn = document.getElementById('rest-btn') as HTMLButtonElement;
-    btn.textContent = Rest: ${timeLeft}s;
+    btn.textContent = `Rest: ${timeLeft}s`;
     
     restInterval = setInterval(() => {
         timeLeft--;
-        btn.textContent = Rest: ${timeLeft}s;
+        btn.textContent = `Rest: ${timeLeft}s`;
         if (timeLeft <= 0) {
             clearInterval(restInterval!);
             btn.textContent = "Start Rest Timer (90s)";
@@ -122,9 +122,9 @@ async function loadHistory() {
 
         history.forEach(session => {
             const div = document.createElement('div');
-[09/07/2026 05:41] code pls: div.className = 'workout-session';
+            div.className = 'workout-session';
             const date = new Date(session.date).toLocaleDateString();
-            div.innerHTML = <strong>${date}</strong> — ${session.exercises.length} exercises;
+            div.innerHTML = `<strong>${date}</strong> — ${session.exercises.length} exercises`;
             container.appendChild(div);
         });
     } catch (error) {
