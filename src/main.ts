@@ -68,14 +68,14 @@ async function loadCurrentWorkout() {
 
         for (const item of workout.exercises) {
             const lastSet = item.sets[item.sets.length - 1];
-            const oneRM = await invoke('calc_1rm', { weight: lastSet.weight, reps: lastSet.reps });
-            const volume = await invoke('calc_volume', { weight: lastSet.weight, reps: lastSet.reps });
-            const best = await invoke('find_best_set', { sets: item.sets });
+            const oneRM = await invoke('calc_1rm', { weight: lastSet.weight, reps: lastSet.reps }) as number;
+            const volume = await invoke('calc_volume', { weight: lastSet.weight, reps: lastSet.reps }) as number;
+            const best = await invoke('find_best_set', { sets: item.sets }) as { reps: number; weight: number } | null;
 
             html += 
                 `<li class="workout-session">
                     <strong>${item.exercise.name}</strong><br>
-                    ${item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ')}
+                    ${item.sets.map((s: Set) => `${s.reps}×${s.weight}kg`).join(' | ')}
                     <br>
                     <small class="text-emerald-400">
                         1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg
