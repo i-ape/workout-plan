@@ -50,13 +50,13 @@ async function logSet() {
         nameInput.value = '';
         loadCurrentWorkout();
     } catch (error) {
-        showStatus("❌ Failed to log set", "red");
+        showStatus(`❌ Failed to log set`, "red");
     }
 }
 
 async function loadCurrentWorkout() {
     try {
-        const workout = await invoke('get_current_workout') as any;
+        const workout = await invoke('get_current_workout') as WorkoutSession | null;
         const container = document.getElementById('current-workout') as HTMLDivElement;
 
         if (!workout || workout.exercises.length === 0) {
@@ -70,16 +70,14 @@ async function loadCurrentWorkout() {
             const lastSet = item.sets[item.sets.length - 1];
             const oneRM = await invoke('calc_1rm', { weight: lastSet.weight, reps: lastSet.reps }) as number;
             const volume = await invoke('calc_volume', { weight: lastSet.weight, reps: lastSet.reps }) as number;
-            const best = await invoke('find_best_set', { sets: item.sets }) as { reps: number; weight: number } | null;
 
             html += 
                 `<li class="workout-session">
                     <strong>${item.exercise.name}</strong><br>
-                    ${item.sets.map((s: Set) => `${s.reps}×${s.weight}kg`).join(' | ')}
+                    ${item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ')}
                     <br>
                     <small class="text-emerald-400">
                         1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg
-                        ${best ? `| Best: ${best.reps}×${best.weight}kg` : ''}
                     </small>
                 </li>`;
         }
@@ -111,7 +109,7 @@ function startRestTimer() {
 
 async function loadHistory() {
     try {
-        const history = await invoke('get_workout_history') as any[];
+        const history = await invoke('get_workout_history') as WorkoutSession[];
         const container = document.getElementById('history-list') as HTMLDivElement;
         container.innerHTML = '';
 
@@ -128,7 +126,7 @@ async function loadHistory() {
             container.appendChild(div);
         });
     } catch (error) {
-        showStatus("Failed to load history", "red");
+        showStatus(`Failed to load history`, "red");
     }
 }
 
