@@ -46,8 +46,9 @@ impl Calc {
 
     // RPE-based weight suggestion (if you add RPE later)
     pub fn suggest_weight_for_rpe(one_rm: f64, reps: i32, target_rpe: f64) -> f64 {
-        // Simple approximation
-        one_rm * (1.0 - (target_rpe - 10.0) * 0.025)
+        let reps_factor = 1.0 - (reps as f64 - 1.0) * 0.02;
+        let rpe_factor = 1.0 - (target_rpe - 10.0) * 0.025;
+        (one_rm * reps_factor * rpe_factor).max(0.0)
     }
 
     // Weekly volume trend (simple)
