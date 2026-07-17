@@ -73,8 +73,8 @@ impl Calc {
     // Best Set & Records
     pub fn best_set(sets: &[Set]) -> Option<&Set> {
         sets.iter().max_by(|a, b| {
-            Self::volume(a.weight, a.reps)
-                .partial_cmp(&Self::volume(b.weight, b.reps))
+            Calc::volume(a.weight, a.reps)
+                .partial_cmp(&Calc::volume(b.weight, b.reps))
                 .unwrap_or(std::cmp::Ordering::Equal)
         })
     }
@@ -103,4 +103,3 @@ impl Calc {
             ((current - previous) / previous) * 100.0
         }
     }
-}
