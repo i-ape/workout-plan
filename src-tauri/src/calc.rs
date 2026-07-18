@@ -25,12 +25,12 @@ impl Calc {
 
     // --- Volume Calculations ---
 
-    pub fn volume(weight: f64, reps: i32) -> f64 {
+    pub fn calc_volume(weight: f64, reps: i32) -> f64 {
         weight * reps as f64
     }
 
-    pub fn total_volume(sets: &[Set]) -> f64 {
-        sets.iter().map(|s| Self::volume(s.weight, s.reps)).sum()
+    pub fn calc_total_volume(sets: &[Set]) -> f64 {
+        sets.iter().map(|s| Self::calc_volume(s.weight, s.reps)).sum()
     }
 
     pub fn weekly_volume(volumes: &[f64]) -> f64 {
@@ -40,41 +40,13 @@ impl Calc {
             volumes.iter().sum::<f64>() / volumes.len() as f64
         }
     }
-}
 
+    // --- Best Set & Records ---
 
-
-
-
-    // Volume Calculations
-    pub fn volume(weight: f64, reps: i32) -> f64 {
-        weight * reps as f64
-    }
-
-    pub fn total_volume(sets: &[Set]) -> f64 {
-        sets.iter().map(|s| s.weight * s.reps as f64).sum()
-    }
-
-    pub fn calc_1rm(weight: f64, reps: i32) -> f64 {
-        if reps <= 1 {
-            weight
-        } else {
-            weight * (1.0 + reps as f64 / 30.0) // Epley formula
-        }
-    }
-
-    pub fn calc_volume(weight: f64, reps: i32) -> f64 {
-        weight * reps as f64
-    }
-
-    pub fn calc_total_volume(sets: &[Set]) -> f64 {
-        sets.iter().map(|s| s.weight * s.reps as f64).sum()
-    }
-    // Best Set & Records
     pub fn best_set(sets: &[Set]) -> Option<&Set> {
         sets.iter().max_by(|a, b| {
-            Calc::volume(a.weight, a.reps)
-                .partial_cmp(&Calc::volume(b.weight, b.reps))
+            Self::calc_volume(a.weight, a.reps)
+                .partial_cmp(&Self::calc_volume(b.weight, b.reps))
                 .unwrap_or(std::cmp::Ordering::Equal)
         })
     }
@@ -103,3 +75,4 @@ impl Calc {
             ((current - previous) / previous) * 100.0
         }
     }
+}
