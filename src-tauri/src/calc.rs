@@ -33,7 +33,7 @@ impl Calc {
         sets.iter().map(|s| Self::calc_volume(s.weight, s.reps)).sum()
     }
 
-    pub fn weekly_volume(volumes: &[f64]) -> f64 {
+    pub fn calc_weekly_volume(volumes: &[f64]) -> f64 {
         if volumes.is_empty() {
             0.0
         } else {
