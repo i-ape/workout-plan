@@ -6,7 +6,7 @@ impl Calc {
     // --- 1RM Calculations ---
 
     /// Epley formula. Generally more accurate for higher rep ranges.
-    pub fn one_rm_epley(weight: f64, reps: i32) -> f64 {
+    pub fn calc_one_rm_epley(weight: f64, reps: i32) -> f64 {
         if reps <= 1 {
             weight
         } else {
@@ -15,7 +15,7 @@ impl Calc {
     }
 
     /// Brzycki formula. Often more accurate for low rep ranges.
-    pub fn one_rm_brzycki(weight: f64, reps: i32) -> f64 {
+    pub fn calc_one_rm_brzycki(weight: f64, reps: i32) -> f64 {
         if reps <= 1 {
             weight
         } else {
@@ -43,7 +43,7 @@ impl Calc {
 
     // --- Best Set & Records ---
 
-    pub fn best_set(sets: &[Set]) -> Option<&Set> {
+    pub fn calc_best_set(sets: &[Set]) -> Option<&Set> {
         sets.iter().max_by(|a, b| {
             Self::calc_volume(a.weight, a.reps)
                 .partial_cmp(&Self::calc_volume(b.weight, b.reps))
@@ -54,12 +54,12 @@ impl Calc {
     // --- Training & Planning ---
 
     /// Estimated training max (90% of 1RM - common in programs).
-    pub fn training_max(one_rm: f64) -> f64 {
+    pub fn calc_training_max(one_rm: f64) -> f64 {
         (one_rm * 0.9).round()
     }
 
     /// RPE-based weight suggestion.
-    pub fn suggest_weight(one_rm: f64, reps: i32, target_rpe: f64) -> f64 {
+    pub fn calc_suggest_weight(one_rm: f64, reps: i32, target_rpe: f64) -> f64 {
         let reps_factor = 1.0 - (reps as f64 - 1.0) * 0.02;
         let rpe_factor = 1.0 - (target_rpe - 10.0) * 0.025;
         (one_rm * reps_factor * rpe_factor).max(0.0)
@@ -68,7 +68,7 @@ impl Calc {
     // --- Progress & Trends ---
 
     /// Simple progress percentage.
-    pub fn progress_percent(current: f64, previous: f64) -> f64 {
+    pub fn calc_progress_percent(current: f64, previous: f64) -> f64 {
         if previous == 0.0 {
             0.0
         } else {
