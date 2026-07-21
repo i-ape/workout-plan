@@ -80,6 +80,16 @@ pub fn suggest_weight_for_rpe(one_rm: f64, reps: i32, target_rpe: f64) -> Result
 }
 
 #[tauri::command]
+pub fn calc_weekly_volume(volumes: Vec<f64>) -> Result<f64, String> {
+    Ok(Calc::calc_weekly_volume(&volumes))
+}
+
+#[tauri::command]
+pub fn calc_progress_percent(current: f64, previous: f64) -> Result<f64, String> {
+    Ok(Calc::calc_progress_percent(current, previous))
+}
+
+#[tauri::command]
 pub fn get_personal_records(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, Set)>, String> {
     let repo = state.lock().map_err(|e| e.to_string())?;
     let exercises = repo.get_all_exercises()?;

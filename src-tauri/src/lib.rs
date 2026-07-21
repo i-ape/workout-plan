@@ -3,6 +3,10 @@ pub mod models;
 pub mod commands;
 pub mod calc;
 
+use commands::*;
+use repository::Repository;
+use std::sync::Mutex;
+
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -13,7 +17,25 @@ fn greet(name: &str) -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .manage(Mutex::new(Repository::new())) // adjust to your actual constructor
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            get_all_exercises,
+            create_exercise,
+            log_set,
+            get_current_workout,
+            get_workout_history,
+            calc_1rm,
+            calc_volume,
+            calc_total_volume,
+            find_best_set,
+            calc_1rm_brzycki,
+            calc_training_max,
+            suggest_weight_for_rpe,
+            calc_weekly_volume,
+            calc_progress_percent,
+            get_personal_records,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
