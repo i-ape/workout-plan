@@ -6,8 +6,8 @@ pub mod calc;
 use commands::*;
 use repository::Repository;
 use std::sync::Mutex;
+use tauri::Manager;
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -17,7 +17,7 @@ fn greet(name: &str) -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .manage(Mutex::new(Repository::new())) // adjust to your actual constructor
+        .manage(Mutex::new(Repository::new()))
         .invoke_handler(tauri::generate_handler![
             greet,
             get_all_exercises,
@@ -36,6 +36,15 @@ pub fn run() {
             calc_progress_percent,
             get_personal_records,
         ])
+        .setup(|app| {
+            #[cfg(debug_assertions)]
+            {
+                if let Some(window) = app.get_webview_window("main") {
+                    window.open_devtools();
+                }
+            }
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
