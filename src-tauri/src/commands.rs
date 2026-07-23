@@ -92,15 +92,25 @@ pub fn calc_progress_percent(current: f64, previous: f64) -> Result<f64, String>
 #[tauri::command]
 pub fn get_personal_records(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, Set)>, String> {
     let repo = state.lock().map_err(|e| e.to_string())?;
-    let exercises = repo.get_all_exercises()?;
-    let mut records = vec![];
+    let history = repo.get_workout_history()?;
 
-    for ex in exercises {
-        records.push((ex.name, Set {
-            reps: 5,
-            weight: 100.0,
-            rpe: None
-        }));
+    // Collect every set ever logged, grouped by exercise name
+    let mut sets_by_exercise: std::collections::HashMap<String, Vec<Set>> = std::collections::HashMap::new();
+
+    for workout in history {
+        for logged in workout.exercises {
+            sets_by_exercise
+                .entry(logged.exercise.name)
+                .or_default()
+                .extend(logged.sets);
+        }
+    }
+
+    let mut records = vec![];
+    for (name, sets) in sets_by_exercise {
+        if let Some(best) = Calc::calc_best_set(&sets) {
+            records.push((name, best.clone()));
+        }
     }
 
     Ok(records)

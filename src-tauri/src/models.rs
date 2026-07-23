@@ -10,11 +10,28 @@ pub struct Exercise {
     pub notes: Option<String>,
 }
 
+impl Exercise {
+    pub fn new(name: impl Into<String>, category: impl Into<String>) -> Self {
+        Self {
+            id: Uuid::new_v4().to_string(),
+            name: name.into(),
+            category: category.into(),
+            notes: None,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Set {
     pub reps: i32,
     pub weight: f64,
     pub rpe: Option<f64>,
+}
+
+impl Set {
+    pub fn new(weight: f64, reps: i32) -> Self {
+        Self { reps, weight, rpe: None }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
