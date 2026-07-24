@@ -5,11 +5,13 @@ interface Exercise {
     id: string;
     name: string;
     category: string;
+    notes?: string;
 }
 
 interface Set {
     reps: number;
     weight: number;
+    rpe?: number;
 }
 
 interface WorkoutSession {
@@ -29,6 +31,8 @@ async function logSet() {
     const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
     const repsInput = document.getElementById('reps') as HTMLInputElement;
     const weightInput = document.getElementById('weight') as HTMLInputElement;
+    const rpeInput = document.getElementById('rpe') as HTMLInputElement;
+    const notesInput = document.getElementById('exercise-notes') as HTMLInputElement;
 
     const name = nameInput.value.trim();
 
@@ -37,17 +41,28 @@ async function logSet() {
         return;
     }
 
-    const exercise: Exercise = { id: "", name, category: "Other" };
+    const notes = notesInput.value.trim();
+    const rpeValue = rpeInput.value.trim();
+
+    const exercise: Exercise = {
+        id: "",
+        name,
+        category: "Other",
+        notes: notes || undefined,
+    };
     const set: Set = {
         reps: parseInt(repsInput.value),
-        weight: parseFloat(weightInput.value)
+        weight: parseFloat(weightInput.value),
+        rpe: rpeValue ? parseFloat(rpeValue) : undefined,
     };
 
     try {
         await invoke('log_set', { exercise, set });
         showStatus(`✅ Logged ${set.reps} × ${set.weight}kg on ${name}`, "green");
-        
+
         nameInput.value = '';
+        rpeInput.value = '';
+        notesInput.value = '';
         loadCurrentWorkout();
     } catch (error) {
         showStatus(`❌ Failed to log set`, "red");
@@ -70,15 +85,17 @@ async function loadCurrentWorkout() {
             const lastSet = item.sets[item.sets.length - 1];
             const oneRM = await invoke('calc_1rm', { weight: lastSet.weight, reps: lastSet.reps }) as number;
             const volume = await invoke('calc_volume', { weight: lastSet.weight, reps: lastSet.reps }) as number;
+            const rpeText = lastSet.rpe !== undefined && lastSet.rpe !== null ? ` @RPE ${lastSet.rpe}` : '';
 
-            html += 
+            html +=
                 `<li class="workout-session">
                     <strong>${item.exercise.name}</strong><br>
-                    ${item.sets.map(s => `${s.reps}×${s.weight}kg`).join(' | ')}
+                    ${item.sets.map(s => `${s.reps}×${s.weight}kg${s.rpe ? ` @${s.rpe}` : ''}`).join(' | ')}
                     <br>
                     <small class="text-emerald-400">
-                        1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg
+                        1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg${rpeText}
                     </small>
+                    ${item.exercise.notes ? `<br><small>${item.exercise.notes}</small>` : ''}
                 </li>`;
         }
 
@@ -91,11 +108,11 @@ async function loadCurrentWorkout() {
 
 function startRestTimer() {
     if (restInterval) clearInterval(restInterval);
-    
+
     timeLeft = 90;
     const btn = document.getElementById('rest-btn') as HTMLButtonElement;
     btn.textContent = `Rest: ${timeLeft}s`;
-    
+
     restInterval = setInterval(() => {
         timeLeft--;
         btn.textContent = `Rest: ${timeLeft}s`;
