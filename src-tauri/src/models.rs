@@ -7,6 +7,7 @@ pub struct Exercise {
     pub id: String,
     pub name: String,
     pub category: String,
+    #[serde(default)]
     pub notes: Option<String>,
 }
 
@@ -25,6 +26,7 @@ impl Exercise {
 pub struct Set {
     pub reps: i32,
     pub weight: f64,
+    #[serde(default)]
     pub rpe: Option<f64>,
 }
 
