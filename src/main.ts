@@ -147,6 +147,35 @@ async function loadHistory() {
     }
 }
 
+async function loadPersonalRecords() {
+    try {
+        const records = await invoke('get_personal_records') as [string, Set][];
+        const container = document.getElementById('pr-list') as HTMLDivElement;
+        container.innerHTML = '';
+
+        if (records.length === 0) {
+            container.innerHTML = '<p>No personal records yet — log some sets first.</p>';
+            return;
+        }
+
+        // Sort alphabetically by exercise name for a stable, readable list
+        records.sort((a, b) => a[0].localeCompare(b[0]));
+
+        let html = '<ul>';
+        for (const [name, set] of records) {
+            const rpeText = set.rpe !== undefined && set.rpe !== null ? ` @RPE ${set.rpe}` : '';
+            html += `<li class="workout-session">
+                <strong>${name}</strong><br>
+                Best set: ${set.reps} × ${set.weight}kg${rpeText}
+            </li>`;
+        }
+        html += '</ul>';
+        container.innerHTML = html;
+    } catch (error) {
+        showStatus(`Failed to load personal records`, "red");
+    }
+}
+
 function showStatus(message: string, color: string = "white") {
     const statusEl = document.getElementById('status') as HTMLParagraphElement;
     statusEl.textContent = message;
@@ -159,3 +188,4 @@ loadCurrentWorkout();
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
 document.getElementById('load-history')!.addEventListener('click', loadHistory);
+document.getElementById('load-prs')!.addEventListener('click', loadPersonalRecords);
