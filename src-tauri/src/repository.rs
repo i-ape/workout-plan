@@ -65,8 +65,18 @@ impl Repository {
     }
 
     // === Logging ===
-    pub fn log_set(&self, exercise: Exercise, set: Set) -> Result<(), String> {
+    pub fn log_set(&self, mut exercise: Exercise, set: Set) -> Result<(), String> {
         let mut data = self.data.lock().unwrap();
+
+        // Upsert into the master exercise list, keyed by name
+        if let Some(existing) = data.exercises.iter()
+            .find(|e| e.name.to_lowercase() == exercise.name.to_lowercase())
+        {
+            exercise.id = existing.id.clone();
+        } else {
+            exercise.id = uuid::Uuid::new_v4().to_string();
+            data.exercises.push(exercise.clone());
+        }
 
         // Get or create today's workout
         let today = chrono::Utc::now().date_naive();
