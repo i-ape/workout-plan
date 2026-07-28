@@ -85,7 +85,10 @@ async function loadCurrentWorkout() {
             const lastSet = item.sets[item.sets.length - 1];
             const oneRM = await invoke('calc_1rm', { weight: lastSet.weight, reps: lastSet.reps }) as number;
             const volume = await invoke('calc_volume', { weight: lastSet.weight, reps: lastSet.reps }) as number;
+            const totalVolume = await invoke('calc_total_volume', { sets: item.sets }) as number;
+            const bestSet = await invoke('find_best_set', { sets: item.sets }) as Set | null;
             const rpeText = lastSet.rpe !== undefined && lastSet.rpe !== null ? ` @RPE ${lastSet.rpe}` : '';
+            const bestSetText = bestSet ? `Best set today: ${bestSet.reps}×${bestSet.weight}kg` : '';
 
             html +=
                 `<li class="workout-session">
@@ -93,8 +96,9 @@ async function loadCurrentWorkout() {
                     ${item.sets.map(s => `${s.reps}×${s.weight}kg${s.rpe ? ` @${s.rpe}` : ''}`).join(' | ')}
                     <br>
                     <small class="text-emerald-400">
-                        1RM: ${oneRM.toFixed(1)}kg | Volume: ${volume.toFixed(0)}kg${rpeText}
+                        1RM: ${oneRM.toFixed(1)}kg | Set volume: ${volume.toFixed(0)}kg | Total volume: ${totalVolume.toFixed(0)}kg${rpeText}
                     </small>
+                    ${bestSetText ? `<br><small>${bestSetText}</small>` : ''}
                     ${item.exercise.notes ? `<br><small>${item.exercise.notes}</small>` : ''}
                 </li>`;
         }
@@ -176,6 +180,97 @@ async function loadPersonalRecords() {
     }
 }
 
+async function calculate1RM() {
+    const weightInput = document.getElementById('calc-weight') as HTMLInputElement;
+    const repsInput = document.getElementById('calc-reps') as HTMLInputElement;
+    const resultEl = document.getElementById('calc-1rm-result') as HTMLDivElement;
+
+    const weight = parseFloat(weightInput.value);
+    const reps = parseInt(repsInput.value);
+
+    if (isNaN(weight) || isNaN(reps)) {
+        showStatus("Enter a valid weight and reps", "red");
+        return;
+    }
+
+    try {
+        const epley = await invoke('calc_1rm', { weight, reps }) as number;
+        const brzycki = await invoke('calc_1rm_brzycki', { weight, reps }) as number;
+        const trainingMax = await invoke('calc_training_max', { oneRm: epley }) as number;
+
+        resultEl.innerHTML = `
+            <p>Epley 1RM: <strong>${epley.toFixed(1)}kg</strong></p>
+            <p>Brzycki 1RM: <strong>${brzycki.toFixed(1)}kg</strong></p>
+            <p>Training Max (90% Epley): <strong>${trainingMax.toFixed(1)}kg</strong></p>
+        `;
+    } catch (error) {
+        showStatus("Failed to calculate 1RM", "red");
+    }
+}
+
+async function calculateSuggestedWeight() {
+    const oneRmInput = document.getElementById('suggest-1rm') as HTMLInputElement;
+    const repsInput = document.getElementById('suggest-reps') as HTMLInputElement;
+    const rpeInput = document.getElementById('suggest-rpe') as HTMLInputElement;
+    const resultEl = document.getElementById('suggest-result') as HTMLDivElement;
+
+    const oneRm = parseFloat(oneRmInput.value);
+    const reps = parseInt(repsInput.value);
+    const targetRpe = parseFloat(rpeInput.value);
+
+    if (isNaN(oneRm) || isNaN(reps) || isNaN(targetRpe)) {
+        showStatus("Enter a valid 1RM, reps, and target RPE", "red");
+        return;
+    }
+
+    try {
+        const suggested = await invoke('suggest_weight_for_rpe', { oneRm, reps, targetRpe }) as number;
+        resultEl.innerHTML = `<p>Suggested weight: <strong>${suggested.toFixed(1)}kg</strong></p>`;
+    } catch (error) {
+        showStatus("Failed to calculate suggested weight", "red");
+    }
+}
+
+async function loadWeeklyTrend() {
+    try {
+        const history = await invoke('get_workout_history') as WorkoutSession[];
+        const container = document.getElementById('weekly-trend') as HTMLDivElement;
+
+        if (history.length === 0) {
+            container.innerHTML = '<p>No workout history yet.</p>';
+            return;
+        }
+
+        // Total volume per session, most recent first
+        const volumes: number[] = [];
+        for (const session of history) {
+            let sessionVolume = 0;
+            for (const item of session.exercises) {
+                sessionVolume += await invoke('calc_total_volume', { sets: item.sets }) as number;
+            }
+            volumes.push(sessionVolume);
+        }
+
+        const avgVolume = await invoke('calc_weekly_volume', { volumes }) as number;
+
+        let progressText = '';
+        if (volumes.length >= 2) {
+            const current = volumes[volumes.length - 1];
+            const previous = volumes[volumes.length - 2];
+            const progress = await invoke('calc_progress_percent', { current, previous }) as number;
+            const sign = progress >= 0 ? '+' : '';
+            progressText = `<p>Change vs previous session: <strong>${sign}${progress.toFixed(1)}%</strong></p>`;
+        }
+
+        container.innerHTML = `
+            <p>Average session volume: <strong>${avgVolume.toFixed(0)}kg</strong></p>
+            ${progressText}
+        `;
+    } catch (error) {
+        console.error("Failed to load weekly trend:", error);
+    }
+}
+
 function showStatus(message: string, color: string = "white") {
     const statusEl = document.getElementById('status') as HTMLParagraphElement;
     statusEl.textContent = message;
@@ -184,8 +279,11 @@ function showStatus(message: string, color: string = "white") {
 
 // Initialize
 loadCurrentWorkout();
+loadWeeklyTrend();
 
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
 document.getElementById('load-history')!.addEventListener('click', loadHistory);
 document.getElementById('load-prs')!.addEventListener('click', loadPersonalRecords);
+document.getElementById('calc-1rm-btn')!.addEventListener('click', calculate1RM);
+document.getElementById('suggest-weight-btn')!.addEventListener('click', calculateSuggestedWeight);

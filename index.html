@@ -12,12 +12,10 @@
 <body class="bg-zinc-950 text-zinc-100 min-h-screen">
     <div class="max-w-lg mx-auto p-6">
         <h1 class="text-4xl font-bold text-center mb-10">🏋️ Workout Tracker</h1>
-
         <!-- Current Workout -->
         <div class="section">
             <h2 class="text-2xl font-semibold mb-6">Today's Workout</h2>
             <div id="current-workout" class="mb-8 text-zinc-300"></div>
-
             <!-- Log Set Form -->
             <div class="space-y-5">
                 <input 
@@ -25,7 +23,6 @@
                     id="exercise-name" 
                     class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg"
                     placeholder="Exercise name (e.g. Bench Press)" />
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm text-zinc-400 mb-2">Reps</label>
@@ -47,17 +44,97 @@
                             class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-center text-xl" />
                     </div>
                 </div>
-
+                <div>
+                    <label class="block text-sm text-zinc-400 mb-2">RPE (optional)</label>
+                    <input 
+                        type="number" 
+                        id="rpe" 
+                        step="0.5" 
+                        min="1" 
+                        max="10"
+                        class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-center text-lg"
+                        placeholder="e.g. 8.5" />
+                </div>
+                <input 
+                    type="text" 
+                    id="exercise-notes" 
+                    class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg"
+                    placeholder="Notes (optional)" />
                 <button id="log-btn"
                         class="w-full bg-emerald-600 hover:bg-emerald-500 py-5 rounded-2xl text-xl font-semibold transition">
                     Log Set
                 </button>
-
                 <button id="rest-btn"
                         class="w-full bg-orange-600 hover:bg-orange-500 py-5 rounded-2xl text-lg font-semibold transition">
                     Start Rest Timer (90s)
                 </button>
             </div>
+        </div>
+
+        <!-- 1RM Calculator -->
+        <div class="section">
+            <h2 class="text-2xl font-semibold mb-4">1RM Calculator</h2>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <input 
+                    type="number" 
+                    id="calc-weight" 
+                    placeholder="Weight (kg)"
+                    class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-center text-lg" />
+                <input 
+                    type="number" 
+                    id="calc-reps" 
+                    placeholder="Reps"
+                    class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-center text-lg" />
+            </div>
+            <button id="calc-1rm-btn"
+                    class="w-full bg-zinc-800 hover:bg-zinc-700 py-4 rounded-2xl text-lg font-semibold transition mb-4">
+                Calculate 1RM
+            </button>
+            <div id="calc-1rm-result" class="text-zinc-300"></div>
+        </div>
+
+        <!-- RPE Weight Suggestor -->
+        <div class="section">
+            <h2 class="text-2xl font-semibold mb-4">Suggested Weight</h2>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                <input 
+                    type="number" 
+                    id="suggest-1rm" 
+                    placeholder="1RM (kg)"
+                    class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-3 py-4 text-center text-lg" />
+                <input 
+                    type="number" 
+                    id="suggest-reps" 
+                    placeholder="Reps"
+                    class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-3 py-4 text-center text-lg" />
+                <input 
+                    type="number" 
+                    id="suggest-rpe" 
+                    step="0.5" 
+                    placeholder="RPE"
+                    class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-3 py-4 text-center text-lg" />
+            </div>
+            <button id="suggest-weight-btn"
+                    class="w-full bg-zinc-800 hover:bg-zinc-700 py-4 rounded-2xl text-lg font-semibold transition mb-4">
+                Suggest Weight
+            </button>
+            <div id="suggest-result" class="text-zinc-300"></div>
+        </div>
+
+        <!-- Weekly Trend -->
+        <div class="section">
+            <h2 class="text-2xl font-semibold mb-4">Volume Trend</h2>
+            <div id="weekly-trend" class="text-zinc-300"></div>
+        </div>
+
+        <!-- Personal Records -->
+        <div class="section">
+            <h2 class="text-2xl font-semibold mb-4">Personal Records</h2>
+            <button id="load-prs"
+                    class="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl mb-4">
+                Load Personal Records
+            </button>
+            <div id="pr-list" class="space-y-3 text-zinc-300"></div>
         </div>
 
         <!-- History -->
@@ -72,7 +149,6 @@
 
         <p id="status" class="text-center mt-8 font-medium min-h-[28px]"></p>
     </div>
-
     <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
