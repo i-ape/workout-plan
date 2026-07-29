@@ -115,3 +115,9 @@ pub fn get_personal_records(state: State<'_, Mutex<Repository>>) -> Result<Vec<(
 
     Ok(records)
 }
+
+#[tauri::command]
+pub fn get_weekly_volume_trend(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, f64)>, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.get_weekly_volume_trend()
+}

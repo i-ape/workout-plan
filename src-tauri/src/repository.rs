@@ -2,6 +2,8 @@ use std::fs;
 use std::path::Path;
 use std::sync::Mutex;
 use crate::models::*;
+use chrono::Datelike;
+use crate::calc::Calc;
 
 const DATA_FILE: &str = "exercise_data.json";
 
@@ -107,6 +109,32 @@ impl Repository {
         self.save();
         Ok(())
     }
+
+
+
+// === Weekly Volume Trend ===
+pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {
+    let data = self.data.lock().unwrap();
+    use std::collections::BTreeMap;
+
+    // BTreeMap keeps weeks in chronological order for free
+    let mut weekly: BTreeMap<(i32, u32), f64> = BTreeMap::new();
+
+    for workout in &data.workouts {
+        let iso = workout.date.iso_week();
+        let key = (iso.year(), iso.week());
+        let session_volume: f64 = workout.exercises.iter()
+            .map(|logged| Calc::calc_total_volume(&logged.sets))
+            .sum();
+        *weekly.entry(key).or_insert(0.0) += session_volume;
+    }
+
+    let result = weekly.into_iter()
+        .map(|((year, week), volume)| (format!("{}-W{:02}", year, week), volume))
+        .collect();
+
+    Ok(result)
+}
 
     pub fn get_workout_history(&self) -> Result<Vec<WorkoutSession>, String> {
         let data = self.data.lock().unwrap();

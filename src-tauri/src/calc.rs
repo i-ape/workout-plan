@@ -75,4 +75,72 @@ impl Calc {
             ((current - previous) / previous) * 100.0
         }
     }
+}#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn epley_at_one_rep_returns_weight_unchanged() {
+        assert_eq!(Calc::calc_one_rm_epley(100.0, 1), 100.0);
+    }
+
+    #[test]
+    fn epley_scales_up_with_reps() {
+        let result = Calc::calc_one_rm_epley(100.0, 10);
+        assert!((result - 133.333).abs() < 0.01);
+    }
+
+    #[test]
+    fn brzycki_at_one_rep_returns_weight_unchanged() {
+        assert_eq!(Calc::calc_one_rm_brzycki(100.0, 1), 100.0);
+    }
+
+    #[test]
+    fn calc_volume_multiplies_weight_by_reps() {
+        assert_eq!(Calc::calc_volume(50.0, 10), 500.0);
+    }
+
+    #[test]
+    fn calc_total_volume_sums_across_sets() {
+        let sets = vec![
+            Set { weight: 100.0, reps: 5, rpe: None },
+            Set { weight: 100.0, reps: 5, rpe: None },
+        ];
+        assert_eq!(Calc::calc_total_volume(&sets), 1000.0);
+    }
+
+    #[test]
+    fn calc_best_set_picks_highest_volume() {
+        let sets = vec![
+            Set { weight: 100.0, reps: 5, rpe: None },  // 500
+            Set { weight: 120.0, reps: 5, rpe: None },  // 600 - best
+            Set { weight: 80.0, reps: 8, rpe: None },   // 640 - actually best
+        ];
+        let best = Calc::calc_best_set(&sets).unwrap();
+        assert_eq!(best.weight, 80.0);
+        assert_eq!(best.reps, 8);
+    }
+
+    #[test]
+    fn calc_best_set_empty_returns_none() {
+        let sets: Vec<Set> = vec![];
+        assert!(Calc::calc_best_set(&sets).is_none());
+    }
+
+    #[test]
+    fn calc_training_max_is_ninety_percent_rounded() {
+        assert_eq!(Calc::calc_training_max(100.0), 90.0);
+    }
+
+    #[test]
+    fn calc_progress_percent_zero_previous_returns_zero() {
+        assert_eq!(Calc::calc_progress_percent(100.0, 0.0), 0.0);
+    }
+
+    #[test]
+    fn calc_progress_percent_computes_correctly() {
+        let result = Calc::calc_progress_percent(110.0, 100.0);
+        assert!((result - 10.0).abs() < 0.001);
+    }
+
 }

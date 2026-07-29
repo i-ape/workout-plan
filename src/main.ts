@@ -233,38 +233,34 @@ async function calculateSuggestedWeight() {
 
 async function loadWeeklyTrend() {
     try {
-        const history = await invoke('get_workout_history') as WorkoutSession[];
+        const trend = await invoke('get_weekly_volume_trend') as [string, number][];
         const container = document.getElementById('weekly-trend') as HTMLDivElement;
 
-        if (history.length === 0) {
+        if (trend.length === 0) {
             container.innerHTML = '<p>No workout history yet.</p>';
             return;
         }
 
-        // Total volume per session, most recent first
-        const volumes: number[] = [];
-        for (const session of history) {
-            let sessionVolume = 0;
-            for (const item of session.exercises) {
-                sessionVolume += await invoke('calc_total_volume', { sets: item.sets }) as number;
-            }
-            volumes.push(sessionVolume);
-        }
-
+        const volumes = trend.map(([, v]) => v);
         const avgVolume = await invoke('calc_weekly_volume', { volumes }) as number;
 
         let progressText = '';
-        if (volumes.length >= 2) {
-            const current = volumes[volumes.length - 1];
-            const previous = volumes[volumes.length - 2];
+        if (trend.length >= 2) {
+            const current = trend[trend.length - 1][1];
+            const previous = trend[trend.length - 2][1];
             const progress = await invoke('calc_progress_percent', { current, previous }) as number;
             const sign = progress >= 0 ? '+' : '';
-            progressText = `<p>Change vs previous session: <strong>${sign}${progress.toFixed(1)}%</strong></p>`;
+            progressText = `<p>Change vs previous week: <strong>${sign}${progress.toFixed(1)}%</strong></p>`;
         }
 
+        const weekRows = trend.map(([week, volume]) =>
+            `<div class="flex justify-between"><span>${week}</span><span>${volume.toFixed(0)}kg</span></div>`
+        ).join('');
+
         container.innerHTML = `
-            <p>Average session volume: <strong>${avgVolume.toFixed(0)}kg</strong></p>
+            <p>Average weekly volume: <strong>${avgVolume.toFixed(0)}kg</strong></p>
             ${progressText}
+            <div class="mt-3 space-y-1 text-sm text-zinc-400">${weekRows}</div>
         `;
     } catch (error) {
         console.error("Failed to load weekly trend:", error);
