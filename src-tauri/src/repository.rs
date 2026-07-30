@@ -111,6 +111,27 @@ impl Repository {
     }
 
 
+// === Exercise Progress ===
+pub fn get_exercise_progress(&self, exercise_name: &str) -> Result<Vec<(String, f64)>, String> {
+    let data = self.data.lock().unwrap();
+    let name_lower = exercise_name.to_lowercase();
+    let mut progress = vec![];
+
+    for workout in &data.workouts {
+        for logged in &workout.exercises {
+            if logged.exercise.name.to_lowercase() == name_lower {
+                if let Some(best) = Calc::calc_best_set(&logged.sets) {
+                    let one_rm = Calc::calc_one_rm_epley(best.weight, best.reps);
+                    let date = workout.date.date_naive().to_string();
+                    progress.push((date, one_rm));
+                }
+            }
+        }
+    }
+
+    Ok(progress)
+}
+
 
 // === Weekly Volume Trend ===
 pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {

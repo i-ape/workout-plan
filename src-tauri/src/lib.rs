@@ -35,6 +35,8 @@ pub fn run() {
             calc_weekly_volume,
             calc_progress_percent,
             get_personal_records,
+            get_exercise_progress,
+            get_weekly_volume_trend
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

@@ -231,6 +231,43 @@ async function calculateSuggestedWeight() {
     }
 }
 
+async function loadExerciseProgress() {
+    const nameInput = document.getElementById('progress-exercise-name') as HTMLInputElement;
+    const container = document.getElementById('exercise-progress-result') as HTMLDivElement;
+
+    const name = nameInput.value.trim();
+    if (!name) {
+        showStatus("Enter an exercise name to view progress", "red");
+        return;
+    }
+
+    try {
+        const progress = await invoke('get_exercise_progress', { exerciseName: name }) as [string, number][];
+
+        if (progress.length === 0) {
+            container.innerHTML = '<p>No history for this exercise yet.</p>';
+            return;
+        }
+
+        const rows = progress.map(([date, oneRm]) =>
+            `<div class="flex justify-between"><span>${date}</span><span>${oneRm.toFixed(1)}kg est. 1RM</span></div>`
+        ).join('');
+
+        let trendText = '';
+        if (progress.length >= 2) {
+            const first = progress[0][1];
+            const latest = progress[progress.length - 1][1];
+            const change = await invoke('calc_progress_percent', { current: latest, previous: first }) as number;
+            const sign = change >= 0 ? '+' : '';
+            trendText = `<p class="mt-2 text-emerald-400">Overall change: ${sign}${change.toFixed(1)}%</p>`;
+        }
+
+        container.innerHTML = `<div class="space-y-1 text-sm text-zinc-400">${rows}</div>${trendText}`;
+    } catch (error) {
+        showStatus("Failed to load exercise progress", "red");
+    }
+}
+
 async function loadWeeklyTrend() {
     try {
         const trend = await invoke('get_weekly_volume_trend') as [string, number][];
@@ -283,3 +320,4 @@ document.getElementById('load-history')!.addEventListener('click', loadHistory);
 document.getElementById('load-prs')!.addEventListener('click', loadPersonalRecords);
 document.getElementById('calc-1rm-btn')!.addEventListener('click', calculate1RM);
 document.getElementById('suggest-weight-btn')!.addEventListener('click', calculateSuggestedWeight);
+document.getElementById('load-progress-btn')!.addEventListener('click', loadExerciseProgress);
