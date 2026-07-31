@@ -110,19 +110,40 @@ async function loadCurrentWorkout() {
     }
 }
 
-function startRestTimer() {
-    if (restInterval) clearInterval(restInterval);
 
-    timeLeft = 90;
+function startRestTimer() {
     const btn = document.getElementById('rest-btn') as HTMLButtonElement;
-    btn.textContent = `Rest: ${timeLeft}s`;
+
+    // If already running, treat this click as "cancel"
+    if (restInterval) {
+        clearInterval(restInterval);
+        restInterval = null;
+        const durationInput = document.getElementById('rest-duration') as HTMLInputElement;
+        const duration = parseInt(durationInput.value) || 90;
+        btn.textContent = `Start Rest Timer (${duration}s)`;
+        btn.classList.remove('bg-red-600', 'hover:bg-red-500');
+        btn.classList.add('bg-orange-600', 'hover:bg-orange-500');
+        showStatus("Rest timer cancelled", "orange");
+        return;
+    }
+
+    const durationInput = document.getElementById('rest-duration') as HTMLInputElement;
+    const duration = parseInt(durationInput.value);
+    timeLeft = isNaN(duration) || duration <= 0 ? 90 : duration;
+
+    btn.textContent = `Rest: ${timeLeft}s (tap to cancel)`;
+    btn.classList.remove('bg-orange-600', 'hover:bg-orange-500');
+    btn.classList.add('bg-red-600', 'hover:bg-red-500');
 
     restInterval = setInterval(() => {
         timeLeft--;
-        btn.textContent = `Rest: ${timeLeft}s`;
+        btn.textContent = `Rest: ${timeLeft}s (tap to cancel)`;
         if (timeLeft <= 0) {
             clearInterval(restInterval!);
-            btn.textContent = "Start Rest Timer (90s)";
+            restInterval = null;
+            btn.textContent = `Start Rest Timer (${duration}s)`;
+            btn.classList.remove('bg-red-600', 'hover:bg-red-500');
+            btn.classList.add('bg-orange-600', 'hover:bg-orange-500');
             showStatus("✅ Rest finished!", "green");
         }
     }, 1000);
