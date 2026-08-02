@@ -304,21 +304,19 @@ async function loadWeeklyTrend() {
 
         let progressText = '';
         if (trend.length >= 2) {
-            const current = trend[trend.length - 1][1];
-            const previous = trend[trend.length - 2][1];
+            const [, current] = trend[trend.length - 1];
+            const [, previous] = trend[trend.length - 2];
             const progress = await invoke('calc_progress_percent', { current, previous }) as number;
             const sign = progress >= 0 ? '+' : '';
             progressText = `<p>Change vs previous week: <strong>${sign}${progress.toFixed(1)}%</strong></p>`;
         }
 
-        const weekRows = trend.map(([week, volume]) =>
-            `<div class="flex justify-between"><span>${week}</span><span>${volume.toFixed(0)}kg</span></div>`
-        ).join('');
+        const rows = trend.map(([week, vol]) => `<li>${week}: ${vol.toFixed(0)}kg</li>`).join('');
 
         container.innerHTML = `
             <p>Average weekly volume: <strong>${avgVolume.toFixed(0)}kg</strong></p>
             ${progressText}
-            <div class="mt-3 space-y-1 text-sm text-zinc-400">${weekRows}</div>
+            <ul class="mt-2 space-y-1 text-sm text-zinc-400">${rows}</ul>
         `;
     } catch (error) {
         console.error("Failed to load weekly trend:", error);

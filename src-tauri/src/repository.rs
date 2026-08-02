@@ -54,7 +54,7 @@ impl Repository {
         Ok(data.exercises.clone())
     }
 
-     // === Current Workout ===
+    // === Current Workout ===
     pub fn get_current_workout(&self) -> Result<Option<WorkoutSession>, String> {
         let data = self.data.lock().unwrap();
         let today = chrono::Utc::now().date_naive();
@@ -95,7 +95,7 @@ impl Repository {
 
         // Add or update exercise in the workout
         if let Some(existing) = workout.exercises.iter_mut()
-            .find(|e| e.exercise.name.to_lowercase() == exercise.name.to_lowercase()) 
+            .find(|e| e.exercise.name.to_lowercase() == exercise.name.to_lowercase())
         {
             existing.sets.push(set);
         } else {
@@ -110,56 +110,53 @@ impl Repository {
         Ok(())
     }
 
+    // === Exercise Progress ===
+    pub fn get_exercise_progress(&self, exercise_name: &str) -> Result<Vec<(String, f64)>, String> {
+        let data = self.data.lock().unwrap();
+        let name_lower = exercise_name.to_lowercase();
+        let mut progress = vec![];
 
-// === Exercise Progress ===
-pub fn get_exercise_progress(&self, exercise_name: &str) -> Result<Vec<(String, f64)>, String> {
-    let data = self.data.lock().unwrap();
-    let name_lower = exercise_name.to_lowercase();
-    let mut progress = vec![];
-
-    for workout in &data.workouts {
-        for logged in &workout.exercises {
-            if logged.exercise.name.to_lowercase() == name_lower {
-                if let Some(best) = Calc::calc_best_set(&logged.sets) {
-                    let one_rm = Calc::calc_one_rm_epley(best.weight, best.reps);
-                    let date = workout.date.date_naive().to_string();
-                    progress.push((date, one_rm));
+        for workout in &data.workouts {
+            for logged in &workout.exercises {
+                if logged.exercise.name.to_lowercase() == name_lower {
+                    if let Some(best) = Calc::calc_best_set(&logged.sets) {
+                        let one_rm = Calc::calc_one_rm_epley(best.weight, best.reps);
+                        let date = workout.date.date_naive().to_string();
+                        progress.push((date, one_rm));
+                    }
                 }
             }
         }
+
+        Ok(progress)
     }
 
-    Ok(progress)
-}
+    // === Weekly Volume Trend ===
+    pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {
+        let data = self.data.lock().unwrap();
+        use std::collections::BTreeMap;
 
+        // BTreeMap keeps weeks in chronological order for free
+        let mut weekly: BTreeMap<(i32, u32), f64> = BTreeMap::new();
 
-// === Weekly Volume Trend ===
-pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {
-    let data = self.data.lock().unwrap();
-    use std::collections::BTreeMap;
+        for workout in &data.workouts {
+            let iso = workout.date.iso_week();
+            let key = (iso.year(), iso.week());
+            let session_volume: f64 = workout.exercises.iter()
+                .map(|logged| Calc::calc_total_volume(&logged.sets))
+                .sum();
+            *weekly.entry(key).or_insert(0.0) += session_volume;
+        }
 
-    // BTreeMap keeps weeks in chronological order for free
-    let mut weekly: BTreeMap<(i32, u32), f64> = BTreeMap::new();
+        let result = weekly.into_iter()
+            .map(|((year, week), volume)| (format!("{}-W{:02}", year, week), volume))
+            .collect();
 
-    for workout in &data.workouts {
-        let iso = workout.date.iso_week();
-        let key = (iso.year(), iso.week());
-        let session_volume: f64 = workout.exercises.iter()
-            .map(|logged| Calc::calc_total_volume(&logged.sets))
-            .sum();
-        *weekly.entry(key).or_insert(0.0) += session_volume;
+        Ok(result)
     }
-
-    let result = weekly.into_iter()
-        .map(|((year, week), volume)| (format!("{}-W{:02}", year, week), volume))
-        .collect();
-
-    Ok(result)
-}
 
     pub fn get_workout_history(&self) -> Result<Vec<WorkoutSession>, String> {
         let data = self.data.lock().unwrap();
         Ok(data.workouts.clone())
     }
-   
 }
