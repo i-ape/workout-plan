@@ -252,38 +252,50 @@ async function calculateSuggestedWeight() {
     }
 }
 
-async function loadExerciseProgress() {
-    const nameInput = document.getElementById('progress-exercise-name') as HTMLInputElement;
-    const container = document.getElementById('exercise-progress-result') as HTMLDivElement;
+async function loadExerciseDropdown() {
+    try {
+        const exercises = await invoke('get_all_exercises') as Exercise[];
+        const select = document.getElementById('progress-exercise-select') as HTMLSelectElement;
 
-    const name = nameInput.value.trim();
-    if (!name) {
-        showStatus("Enter an exercise name to view progress", "red");
+        select.innerHTML = '<option value="">Select an exercise...</option>';
+
+        // De-duplicate by name, sort alphabetically
+        const uniqueNames = Array.from(new Set(exercises.map(e => e.name))).sort();
+
+        for (const name of uniqueNames) {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            select.appendChild(option);
+        }
+    } catch (error) {
+        console.error("Failed to load exercises:", error);
+    }
+}
+
+async function loadExerciseProgress() {
+    const select = document.getElementById('progress-exercise-select') as HTMLSelectElement;
+    const container = document.getElementById('exercise-progress-list') as HTMLDivElement;
+    const exerciseName = select.value;
+
+    if (!exerciseName) {
+        container.innerHTML = '';
         return;
     }
 
     try {
-        const progress = await invoke('get_exercise_progress', { exerciseName: name }) as [string, number][];
+        const progress = await invoke('get_exercise_progress', { exerciseName }) as [string, number][];
 
         if (progress.length === 0) {
-            container.innerHTML = '<p>No history for this exercise yet.</p>';
+            container.innerHTML = '<p>No logged sets for this exercise yet.</p>';
             return;
         }
 
-        const rows = progress.map(([date, oneRm]) =>
-            `<div class="flex justify-between"><span>${date}</span><span>${oneRm.toFixed(1)}kg est. 1RM</span></div>`
-        ).join('');
+        const rows = progress
+            .map(([date, oneRm]) => `<li>${date}: <strong>${oneRm.toFixed(1)}kg</strong> est. 1RM</li>`)
+            .join('');
 
-        let trendText = '';
-        if (progress.length >= 2) {
-            const first = progress[0][1];
-            const latest = progress[progress.length - 1][1];
-            const change = await invoke('calc_progress_percent', { current: latest, previous: first }) as number;
-            const sign = change >= 0 ? '+' : '';
-            trendText = `<p class="mt-2 text-emerald-400">Overall change: ${sign}${change.toFixed(1)}%</p>`;
-        }
-
-        container.innerHTML = `<div class="space-y-1 text-sm text-zinc-400">${rows}</div>${trendText}`;
+        container.innerHTML = `<ul class="space-y-1 text-sm text-zinc-300">${rows}</ul>`;
     } catch (error) {
         showStatus("Failed to load exercise progress", "red");
     }
@@ -332,6 +344,8 @@ function showStatus(message: string, color: string = "white") {
 // Initialize
 loadCurrentWorkout();
 loadWeeklyTrend();
+loadExerciseDropdown();
+
 
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
@@ -340,3 +354,4 @@ document.getElementById('load-prs')!.addEventListener('click', loadPersonalRecor
 document.getElementById('calc-1rm-btn')!.addEventListener('click', calculate1RM);
 document.getElementById('suggest-weight-btn')!.addEventListener('click', calculateSuggestedWeight);
 document.getElementById('load-progress-btn')!.addEventListener('click', loadExerciseProgress);
+document.getElementById('progress-exercise-select')!.addEventListener('change', loadExerciseProgress);
