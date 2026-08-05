@@ -75,6 +75,8 @@ impl Calc {
             ((current - previous) / previous) * 100.0
         }
     }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
