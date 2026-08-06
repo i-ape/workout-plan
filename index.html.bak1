@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Workout Tracker</title>
+</head>
+<body style="background: #111; color: #eee; font-family: sans-serif; padding: 2rem;">
+    <h1>Hello, Tauri</h1>
+    <p>If you can see this, the window is rendering.</p>
+</body>
+</html>
