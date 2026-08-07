@@ -64,6 +64,7 @@ async function logSet() {
         rpeInput.value = '';
         notesInput.value = '';
         loadCurrentWorkout();
+        loadExerciseDropdown();
     } catch (error) {
         showStatus(`❌ Failed to log set`, "red");
     }
@@ -109,7 +110,6 @@ async function loadCurrentWorkout() {
         console.error("Failed to load current workout:", error);
     }
 }
-
 
 function startRestTimer() {
     const btn = document.getElementById('rest-btn') as HTMLButtonElement;
@@ -341,12 +341,10 @@ loadCurrentWorkout();
 loadWeeklyTrend();
 loadExerciseDropdown();
 
-
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
 document.getElementById('load-history')!.addEventListener('click', loadHistory);
 document.getElementById('load-prs')!.addEventListener('click', loadPersonalRecords);
 document.getElementById('calc-1rm-btn')!.addEventListener('click', calculate1RM);
 document.getElementById('suggest-weight-btn')!.addEventListener('click', calculateSuggestedWeight);
-document.getElementById('load-progress-btn')!.addEventListener('click', loadExerciseProgress);
 document.getElementById('progress-exercise-select')!.addEventListener('change', loadExerciseProgress);
