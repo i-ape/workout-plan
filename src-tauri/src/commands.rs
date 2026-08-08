@@ -29,6 +29,26 @@ pub fn log_set(
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.log_set(exercise, set)
 }
+#[tauri::command]
+pub fn delete_set(
+    state: State<'_, Mutex<Repository>>,
+    exercise_name: String,
+    set_index: usize
+) -> Result<(), String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.delete_set(&exercise_name, set_index)
+}
+
+#[tauri::command]
+pub fn edit_set(
+    state: State<'_, Mutex<Repository>>,
+    exercise_name: String,
+    set_index: usize,
+    set: Set
+) -> Result<(), String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.edit_set(&exercise_name, set_index, set)
+}
 
 #[tauri::command]
 pub fn get_current_workout(state: State<'_, Mutex<Repository>>) -> Result<Option<WorkoutSession>, String> {
@@ -130,3 +150,4 @@ pub fn get_weekly_volume_trend(state: State<'_, Mutex<Repository>>) -> Result<Ve
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.get_weekly_volume_trend()
 }
+

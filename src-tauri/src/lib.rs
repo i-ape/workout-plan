@@ -36,6 +36,8 @@ pub fn run() {
             get_personal_records,
             get_exercise_progress,
             get_weekly_volume_trend,
+            delete_set,
+            edit_set
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

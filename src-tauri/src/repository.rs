@@ -110,6 +110,60 @@ impl Repository {
         Ok(())
     }
 
+
+    // === Editing & Deleting ===
+    pub fn delete_set(&self, exercise_name: &str, set_index: usize) -> Result<(), String> {
+        let mut data = self.data.lock().unwrap();
+        let today = chrono::Utc::now().date_naive();
+
+        let workout = data.workouts.iter_mut()
+            .find(|w| w.date.date_naive() == today)
+            .ok_or("No workout logged today")?;
+
+        let logged = workout.exercises.iter_mut()
+            .find(|e| e.exercise.name.to_lowercase() == exercise_name.to_lowercase())
+            .ok_or("Exercise not found in today's workout")?;
+
+        if set_index >= logged.sets.len() {
+            return Err("Set index out of range".to_string());
+        }
+
+        logged.sets.remove(set_index);
+
+        // If that was the last set for this exercise, drop the exercise entry too
+        if logged.sets.is_empty() {
+            workout.exercises.retain(|e| e.exercise.name.to_lowercase() != exercise_name.to_lowercase());
+        }
+
+        drop(data);
+        self.save();
+        Ok(())
+    }
+
+    pub fn edit_set(&self, exercise_name: &str, set_index: usize, set: Set) -> Result<(), String> {
+        let mut data = self.data.lock().unwrap();
+        let today = chrono::Utc::now().date_naive();
+
+        let workout = data.workouts.iter_mut()
+            .find(|w| w.date.date_naive() == today)
+            .ok_or("No workout logged today")?;
+
+        let logged = workout.exercises.iter_mut()
+            .find(|e| e.exercise.name.to_lowercase() == exercise_name.to_lowercase())
+            .ok_or("Exercise not found in today's workout")?;
+
+        if set_index >= logged.sets.len() {
+            return Err("Set index out of range".to_string());
+        }
+
+        logged.sets[set_index] = set;
+
+        drop(data);
+        self.save();
+        Ok(())
+    }
+
+    
     // === Exercise Progress ===
     pub fn get_exercise_progress(&self, exercise_name: &str) -> Result<Vec<(String, f64)>, String> {
         let data = self.data.lock().unwrap();
