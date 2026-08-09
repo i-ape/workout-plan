@@ -91,11 +91,27 @@ async function loadCurrentWorkout() {
             const rpeText = lastSet.rpe !== undefined && lastSet.rpe !== null ? ` @RPE ${lastSet.rpe}` : '';
             const bestSetText = bestSet ? `Best set today: ${bestSet.reps}×${bestSet.weight}kg` : '';
 
+            const setsHtml = item.sets.map((s, i) => `
+                <div class="flex items-center justify-between gap-2 py-1">
+                    <span>${s.reps}×${s.weight}kg${s.rpe ? ` @${s.rpe}` : ''}</span>
+                    <span class="flex gap-2">
+                        <button class="edit-set-btn text-xs px-2 py-1 bg-zinc-700 hover:bg-zinc-600 rounded-lg"
+                                data-exercise="${item.exercise.name}" data-index="${i}"
+                                data-reps="${s.reps}" data-weight="${s.weight}" data-rpe="${s.rpe ?? ''}">
+                            Edit
+                        </button>
+                        <button class="delete-set-btn text-xs px-2 py-1 bg-red-800 hover:bg-red-700 rounded-lg"
+                                data-exercise="${item.exercise.name}" data-index="${i}">
+                            Delete
+                        </button>
+                    </span>
+                </div>
+            `).join('');
+
             html +=
                 `<li class="workout-session">
-                    <strong>${item.exercise.name}</strong><br>
-                    ${item.sets.map(s => `${s.reps}×${s.weight}kg${s.rpe ? ` @${s.rpe}` : ''}`).join(' | ')}
-                    <br>
+                    <strong>${item.exercise.name}</strong>
+                    ${setsHtml}
                     <small class="text-emerald-400">
                         1RM: ${oneRM.toFixed(1)}kg | Set volume: ${volume.toFixed(0)}kg | Total volume: ${totalVolume.toFixed(0)}kg${rpeText}
                     </small>
@@ -106,8 +122,75 @@ async function loadCurrentWorkout() {
 
         html += '</ul>';
         container.innerHTML = html;
+
+        // Wire up edit/delete buttons (re-created every render, so re-attach each time)
+        container.querySelectorAll('.delete-set-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const target = e.currentTarget as HTMLButtonElement;
+                const exerciseName = target.dataset.exercise!;
+                const index = parseInt(target.dataset.index!);
+                await handleDeleteSet(exerciseName, index);
+            });
+        });
+
+        container.querySelectorAll('.edit-set-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget as HTMLButtonElement;
+                openEditSet(
+                    target.dataset.exercise!,
+                    parseInt(target.dataset.index!),
+                    parseInt(target.dataset.reps!),
+                    parseFloat(target.dataset.weight!),
+                    target.dataset.rpe ? parseFloat(target.dataset.rpe) : undefined
+                );
+            });
+        });
     } catch (error) {
         console.error("Failed to load current workout:", error);
+    }
+}
+
+async function handleDeleteSet(exerciseName: string, index: number) {
+    try {
+        await invoke('delete_set', { exerciseName, setIndex: index });
+        showStatus(`Deleted set from ${exerciseName}`, "green");
+        loadCurrentWorkout();
+    } catch (error) {
+        showStatus("Failed to delete set", "red");
+    }
+}
+
+function openEditSet(exerciseName: string, index: number, reps: number, weight: number, rpe?: number) {
+    const newReps = prompt(`Reps for ${exerciseName}:`, reps.toString());
+    if (newReps === null) return;
+
+    const newWeight = prompt(`Weight (kg) for ${exerciseName}:`, weight.toString());
+    if (newWeight === null) return;
+
+    const newRpe = prompt(`RPE (optional, leave blank for none):`, rpe?.toString() ?? '');
+    if (newRpe === null) return;
+
+    const set: Set = {
+        reps: parseInt(newReps),
+        weight: parseFloat(newWeight),
+        rpe: newRpe.trim() ? parseFloat(newRpe) : undefined,
+    };
+
+    if (isNaN(set.reps) || isNaN(set.weight)) {
+        showStatus("Invalid reps or weight", "red");
+        return;
+    }
+
+    handleEditSet(exerciseName, index, set);
+}
+
+async function handleEditSet(exerciseName: string, index: number, set: Set) {
+    try {
+        await invoke('edit_set', { exerciseName, setIndex: index, set });
+        showStatus(`Updated set on ${exerciseName}`, "green");
+        loadCurrentWorkout();
+    } catch (error) {
+        showStatus("Failed to update set", "red");
     }
 }
 
