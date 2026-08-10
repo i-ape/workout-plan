@@ -40,6 +40,18 @@ pub fn delete_set(
 }
 
 #[tauri::command]
+pub fn get_category_volume(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, f64)>, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.get_category_volume()
+}
+
+#[tauri::command]
+pub fn get_last_trained_by_category(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, String)>, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.get_last_trained_by_category()
+}
+
+#[tauri::command]
 pub fn get_workout_by_date(
     state: State<'_, Mutex<Repository>>,
     date: String

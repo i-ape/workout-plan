@@ -39,7 +39,9 @@ pub fn run() {
             delete_set,
             edit_set,
             get_workout_by_date,
-            get_workout_dates
+            get_workout_dates,
+            get_category_volume,
+            get_last_trained_by_category
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

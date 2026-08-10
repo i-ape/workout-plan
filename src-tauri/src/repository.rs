@@ -185,6 +185,44 @@ impl Repository {
         Ok(progress)
     }
 
+    // === Body Part Focus ===
+    pub fn get_category_volume(&self) -> Result<Vec<(String, f64)>, String> {
+        let data = self.data.lock().unwrap();
+        let mut totals: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
+
+        for workout in &data.workouts {
+            for logged in &workout.exercises {
+                let volume = Calc::calc_total_volume(&logged.sets);
+                *totals.entry(logged.exercise.category.clone()).or_insert(0.0) += volume;
+            }
+        }
+
+        let mut result: Vec<(String, f64)> = totals.into_iter().collect();
+        result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        Ok(result)
+    }
+
+    pub fn get_last_trained_by_category(&self) -> Result<Vec<(String, String)>, String> {
+        let data = self.data.lock().unwrap();
+        let mut last_trained: std::collections::HashMap<String, chrono::NaiveDate> = std::collections::HashMap::new();
+
+        for workout in &data.workouts {
+            let date = workout.date.date_naive();
+            for logged in &workout.exercises {
+                let category = logged.exercise.category.clone();
+                last_trained.entry(category)
+                    .and_modify(|d| if date > *d { *d = date; })
+                    .or_insert(date);
+            }
+        }
+
+        let mut result: Vec<(String, String)> = last_trained.into_iter()
+            .map(|(cat, date)| (cat, date.to_string()))
+            .collect();
+        result.sort_by(|a, b| b.1.cmp(&a.1));
+        Ok(result)
+    }
+
     // === Calendar / Date-based lookups ===
     pub fn get_workout_by_date(&self, date: chrono::NaiveDate) -> Result<Option<WorkoutSession>, String> {
         let data = self.data.lock().unwrap();

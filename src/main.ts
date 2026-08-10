@@ -463,6 +463,48 @@ async function renderCalendar() {
     });
 }
 
+async function loadCategoryFocus() {
+    try {
+        const volumes = await invoke('get_category_volume') as [string, number][];
+        const lastTrained = await invoke('get_last_trained_by_category') as [string, string][];
+        const container = document.getElementById('category-focus') as HTMLDivElement;
+
+        if (volumes.length === 0) {
+            container.innerHTML = '<p>No workout history yet.</p>';
+            return;
+        }
+
+        const lastTrainedMap = new Map(lastTrained);
+        const today = new Date().toISOString().split('T')[0];
+
+        const rows = volumes.map(([category, volume]) => {
+            const lastDate = lastTrainedMap.get(category);
+            let daysAgoText = 'never';
+            let staleClass = '';
+
+            if (lastDate) {
+                const daysAgo = Math.floor(
+                    (new Date(today).getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24)
+                );
+                daysAgoText = daysAgo === 0 ? 'today' : `${daysAgo}d ago`;
+                if (daysAgo >= 7) staleClass = 'text-orange-400';
+            }
+
+            return `
+                <div class="flex justify-between py-2 border-b border-zinc-800">
+                    <span class="font-medium">${category}</span>
+                    <span class="text-zinc-400">${volume.toFixed(0)}kg total</span>
+                    <span class="${staleClass}">${daysAgoText}</span>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = rows;
+    } catch (error) {
+        console.error("Failed to load category focus:", error);
+    }
+}
+
 async function showCalendarDay(date: string) {
     const detail = document.getElementById('calendar-day-detail') as HTMLDivElement;
     try {
@@ -500,6 +542,7 @@ loadCurrentWorkout();
 loadWeeklyTrend();
 loadExerciseDropdown();
 renderCalendar();
+loadCategoryFocus();
 
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
@@ -510,3 +553,4 @@ document.getElementById('suggest-weight-btn')!.addEventListener('click', calcula
 document.getElementById('progress-exercise-select')!.addEventListener('change', loadExerciseProgress);
 document.getElementById('cal-prev')!.addEventListener('click', () => changeCalendarMonth(-1));
 document.getElementById('cal-next')!.addEventListener('click', () => changeCalendarMonth(1));
+
