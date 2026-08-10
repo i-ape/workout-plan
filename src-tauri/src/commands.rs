@@ -40,6 +40,23 @@ pub fn delete_set(
 }
 
 #[tauri::command]
+pub fn get_workout_by_date(
+    state: State<'_, Mutex<Repository>>,
+    date: String
+) -> Result<Option<WorkoutSession>, String> {
+    let parsed = chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d")
+        .map_err(|e| e.to_string())?;
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.get_workout_by_date(parsed)
+}
+
+#[tauri::command]
+pub fn get_workout_dates(state: State<'_, Mutex<Repository>>) -> Result<Vec<String>, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.get_workout_dates()
+}
+
+#[tauri::command]
 pub fn edit_set(
     state: State<'_, Mutex<Repository>>,
     exercise_name: String,

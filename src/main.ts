@@ -413,6 +413,82 @@ async function loadWeeklyTrend() {
     }
 }
 
+let calendarViewDate = new Date();
+
+async function renderCalendar() {
+    const grid = document.getElementById('calendar-grid') as HTMLDivElement;
+    const label = document.getElementById('cal-month-label') as HTMLSpanElement;
+
+    const year = calendarViewDate.getFullYear();
+    const month = calendarViewDate.getMonth();
+
+    label.textContent = calendarViewDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+    const workoutDates = await invoke('get_workout_dates') as string[];
+    const workoutDateSet = new Set(workoutDates);
+
+    const firstOfMonth = new Date(year, month, 1);
+    const startWeekday = firstOfMonth.getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    let html = dayLabels.map(d => `<div class="text-zinc-500 font-medium">${d}</div>`).join('');
+
+    for (let i = 0; i < startWeekday; i++) {
+        html += `<div></div>`;
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateObj = new Date(year, month, day);
+        const dateStr = dateObj.toISOString().split('T')[0];
+        const hasWorkout = workoutDateSet.has(dateStr);
+        const isToday = dateStr === new Date().toISOString().split('T')[0];
+
+        const baseClasses = 'py-2 rounded-lg cursor-pointer transition';
+        const stateClasses = hasWorkout
+            ? 'bg-emerald-600 hover:bg-emerald-500 font-semibold'
+            : 'bg-zinc-900 hover:bg-zinc-800';
+        const todayRing = isToday ? 'ring-2 ring-orange-400' : '';
+
+        html += `<div class="${baseClasses} ${stateClasses} ${todayRing}" data-date="${dateStr}">${day}</div>`;
+    }
+
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('[data-date]').forEach(cell => {
+        cell.addEventListener('click', (e) => {
+            const date = (e.currentTarget as HTMLElement).dataset.date!;
+            showCalendarDay(date);
+        });
+    });
+}
+
+async function showCalendarDay(date: string) {
+    const detail = document.getElementById('calendar-day-detail') as HTMLDivElement;
+    try {
+        const workout = await invoke('get_workout_by_date', { date }) as WorkoutSession | null;
+
+        if (!workout || workout.exercises.length === 0) {
+            detail.innerHTML = `<p><strong>${date}</strong> — no sets logged.</p>`;
+            return;
+        }
+
+        const rows = workout.exercises.map(item => {
+            const sets = item.sets.map(s => `${s.reps}×${s.weight}kg${s.rpe ? ` @${s.rpe}` : ''}`).join(' | ');
+            return `<li><strong>${item.exercise.name}</strong>: ${sets}</li>`;
+        }).join('');
+
+        detail.innerHTML = `<p class="mb-2"><strong>${date}</strong></p><ul class="space-y-1">${rows}</ul>`;
+    } catch (error) {
+        detail.innerHTML = `<p>Failed to load workout for ${date}.</p>`;
+    }
+}
+
+function changeCalendarMonth(offset: number) {
+    calendarViewDate = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + offset, 1);
+    renderCalendar();
+}
+
 function showStatus(message: string, color: string = "white") {
     const statusEl = document.getElementById('status') as HTMLParagraphElement;
     statusEl.textContent = message;
@@ -423,6 +499,7 @@ function showStatus(message: string, color: string = "white") {
 loadCurrentWorkout();
 loadWeeklyTrend();
 loadExerciseDropdown();
+renderCalendar();
 
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
@@ -431,3 +508,5 @@ document.getElementById('load-prs')!.addEventListener('click', loadPersonalRecor
 document.getElementById('calc-1rm-btn')!.addEventListener('click', calculate1RM);
 document.getElementById('suggest-weight-btn')!.addEventListener('click', calculateSuggestedWeight);
 document.getElementById('progress-exercise-select')!.addEventListener('change', loadExerciseProgress);
+document.getElementById('cal-prev')!.addEventListener('click', () => changeCalendarMonth(-1));
+document.getElementById('cal-next')!.addEventListener('click', () => changeCalendarMonth(1));

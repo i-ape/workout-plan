@@ -185,6 +185,23 @@ impl Repository {
         Ok(progress)
     }
 
+    // === Calendar / Date-based lookups ===
+    pub fn get_workout_by_date(&self, date: chrono::NaiveDate) -> Result<Option<WorkoutSession>, String> {
+        let data = self.data.lock().unwrap();
+        let workout = data.workouts.iter()
+            .find(|w| w.date.date_naive() == date)
+            .cloned();
+        Ok(workout)
+    }
+
+    pub fn get_workout_dates(&self) -> Result<Vec<String>, String> {
+        let data = self.data.lock().unwrap();
+        let dates: Vec<String> = data.workouts.iter()
+            .map(|w| w.date.date_naive().to_string())
+            .collect();
+        Ok(dates)
+    }
+
     // === Weekly Volume Trend ===
     pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {
         let data = self.data.lock().unwrap();
@@ -214,3 +231,4 @@ impl Repository {
         Ok(data.workouts.clone())
     }
 }
+

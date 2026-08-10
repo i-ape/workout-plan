@@ -37,7 +37,9 @@ pub fn run() {
             get_exercise_progress,
             get_weekly_volume_trend,
             delete_set,
-            edit_set
+            edit_set,
+            get_workout_by_date,
+            get_workout_dates
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]
