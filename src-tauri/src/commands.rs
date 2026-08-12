@@ -180,3 +180,8 @@ pub fn get_weekly_volume_trend(state: State<'_, Mutex<Repository>>) -> Result<Ve
     repo.get_weekly_volume_trend()
 }
 
+#[tauri::command]
+pub fn export_to_csv(state: State<'_, Mutex<Repository>>) -> Result<String, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.export_to_csv()
+}

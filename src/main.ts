@@ -531,6 +531,26 @@ function changeCalendarMonth(offset: number) {
     renderCalendar();
 }
 
+async function exportToCsv() {
+    try {
+        const csv = await invoke('export_to_csv') as string;
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `workout-data-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showStatus("✅ Exported to CSV", "green");
+    } catch (error) {
+        showStatus("Failed to export CSV", "red");
+    }
+}
+
 function showStatus(message: string, color: string = "white") {
     const statusEl = document.getElementById('status') as HTMLParagraphElement;
     statusEl.textContent = message;
@@ -553,4 +573,6 @@ document.getElementById('suggest-weight-btn')!.addEventListener('click', calcula
 document.getElementById('progress-exercise-select')!.addEventListener('change', loadExerciseProgress);
 document.getElementById('cal-prev')!.addEventListener('click', () => changeCalendarMonth(-1));
 document.getElementById('cal-next')!.addEventListener('click', () => changeCalendarMonth(1));
+document.getElementById('export-csv-btn')!.addEventListener('click', exportToCsv);
+
 

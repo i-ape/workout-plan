@@ -41,7 +41,8 @@ pub fn run() {
             get_workout_by_date,
             get_workout_dates,
             get_category_volume,
-            get_last_trained_by_category
+            get_last_trained_by_category,
+            export_to_csv
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

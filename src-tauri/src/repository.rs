@@ -17,6 +17,14 @@ pub struct Repository {
     data: Mutex<AppData>,
 }
 
+fn escape_csv_field(field: &str) -> String {
+    if field.contains(',') || field.contains('"') || field.contains('\n') {
+        format!("\"{}\"", field.replace('"', "\"\""))
+    } else {
+        field.to_string()
+    }
+}
+
 impl Repository {
     pub fn new() -> Self {
         let data = if Path::new(DATA_FILE).exists() {
@@ -221,6 +229,32 @@ impl Repository {
             .collect();
         result.sort_by(|a, b| b.1.cmp(&a.1));
         Ok(result)
+    }
+
+    // === Export ===
+    pub fn export_to_csv(&self) -> Result<String, String> {
+        let data = self.data.lock().unwrap();
+        let mut csv = String::from("date,exercise,category,reps,weight,rpe\n");
+
+        for workout in &data.workouts {
+            let date = workout.date.date_naive().to_string();
+            for logged in &workout.exercises {
+                for set in &logged.sets {
+                    let rpe_str = set.rpe.map(|r| r.to_string()).unwrap_or_default();
+                    csv.push_str(&format!(
+                        "{},{},{},{},{},{}\n",
+                        date,
+                        escape_csv_field(&logged.exercise.name),
+                        escape_csv_field(&logged.exercise.category),
+                        set.reps,
+                        set.weight,
+                        rpe_str
+                    ));
+                }
+            }
+        }
+
+        Ok(csv)
     }
 
     // === Calendar / Date-based lookups ===
