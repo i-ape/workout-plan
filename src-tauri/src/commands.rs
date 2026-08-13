@@ -185,3 +185,8 @@ pub fn export_to_csv(state: State<'_, Mutex<Repository>>) -> Result<String, Stri
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.export_to_csv()
 }
+
+#[tauri::command]
+pub fn calc_warmup_sets(working_weight: f64, bar_weight: f64) -> Result<Vec<(f64, i32)>, String> {
+    Ok(Calc::calc_warmup_sets(working_weight, bar_weight))
+}

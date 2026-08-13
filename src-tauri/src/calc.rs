@@ -65,6 +65,25 @@ impl Calc {
         (one_rm * reps_factor * rpe_factor).max(0.0)
     }
 
+    /// Generates a warm-up ramp leading up to a target working weight.
+    /// Returns (weight, reps) pairs, typically 3-4 ramp sets before the work set.
+    pub fn calc_warmup_sets(working_weight: f64, bar_weight: f64) -> Vec<(f64, i32)> {
+        if working_weight <= bar_weight {
+            return vec![(bar_weight, 5)];
+        }
+
+        let percentages = [(0.4, 8), (0.6, 5), (0.8, 3), (0.9, 1)];
+        let mut sets = vec![(bar_weight, 5)];
+
+        for (pct, reps) in percentages {
+            let weight = (working_weight * pct).round();
+            if weight > bar_weight {
+                sets.push((weight, reps));
+            }
+        }
+
+        sets
+    }
     // --- Progress & Trends ---
 
     /// Simple progress percentage.
@@ -161,5 +180,24 @@ mod tests {
     #[test]
     fn progress_percent_previous_zero_returns_zero() {
         assert_eq!(Calc::calc_progress_percent(50.0, 0.0), 0.0);
+    }
+    #[test]
+    fn warmup_sets_starts_with_bar() {
+        let sets = Calc::calc_warmup_sets(100.0, 20.0);
+        assert_eq!(sets[0], (20.0, 5));
+    }
+
+    #[test]
+    fn warmup_sets_below_bar_weight_returns_just_bar() {
+        let sets = Calc::calc_warmup_sets(15.0, 20.0);
+        assert_eq!(sets, vec![(20.0, 5)]);
+    }
+
+    #[test]
+    fn warmup_sets_ramps_upward() {
+        let sets = Calc::calc_warmup_sets(100.0, 20.0);
+        for i in 1..sets.len() {
+            assert!(sets[i].0 >= sets[i - 1].0);
+        }
     }
 }
