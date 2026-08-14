@@ -42,10 +42,7 @@ async function generateWarmup() {
 
     try {
         const sets = await invoke('calc_warmup_sets', { workingWeight, barWeight }) as [number, number][];
-        const rows = sets.map(([weight, reps], i) => {
-            const label = i === sets.length - 0 ? '' : '';
-            return `<li>${weight}kg × ${reps} reps</li>`;
-        }).join('');
+        const rows = sets.map(([weight, reps]) => `<li>${weight}kg × ${reps} reps</li>`).join('');
 
         resultEl.innerHTML = `
             <ul class="space-y-1">${rows}</ul>
@@ -592,34 +589,7 @@ loadWeeklyTrend();
 loadExerciseDropdown();
 renderCalendar();
 loadCategoryFocus();
-async function generateWarmup() {
-    const targetInput = document.getElementById('warmup-target') as HTMLInputElement;
-    const barInput = document.getElementById('warmup-bar') as HTMLInputElement;
-    const resultEl = document.getElementById('warmup-result') as HTMLDivElement;
 
-    const workingWeight = parseFloat(targetInput.value);
-    const barWeight = parseFloat(barInput.value);
-
-    if (isNaN(workingWeight) || isNaN(barWeight)) {
-        showStatus("Enter a valid working weight and bar weight", "red");
-        return;
-    }
-
-    try {
-        const sets = await invoke('calc_warmup_sets', { workingWeight, barWeight }) as [number, number][];
-        const rows = sets.map(([weight, reps], i) => {
-            const label = i === sets.length - 0 ? '' : '';
-            return `<li>${weight}kg × ${reps} reps</li>`;
-        }).join('');
-
-        resultEl.innerHTML = `
-            <ul class="space-y-1">${rows}</ul>
-            <p class="mt-2 text-sm text-zinc-500">Then: ${workingWeight}kg for your working sets</p>
-        `;
-    } catch (error) {
-        showStatus("Failed to generate warm-up sets", "red");
-    }
-}
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
 document.getElementById('load-history')!.addEventListener('click', loadHistory);
@@ -627,9 +597,7 @@ document.getElementById('load-prs')!.addEventListener('click', loadPersonalRecor
 document.getElementById('calc-1rm-btn')!.addEventListener('click', calculate1RM);
 document.getElementById('suggest-weight-btn')!.addEventListener('click', calculateSuggestedWeight);
 document.getElementById('progress-exercise-select')!.addEventListener('change', loadExerciseProgress);
-document.getElementById('cal-prev')!.addEventListener('click', () => changeCalendarMonth(-1));
-document.getElementById('cal-next')!.addEventListener('click', () => changeCalendarMonth(1));
+document.getElementById('prev-month')!.addEventListener('click', () => changeCalendarMonth(-1));
+document.getElementById('next-month')!.addEventListener('click', () => changeCalendarMonth(1));
 document.getElementById('export-csv-btn')!.addEventListener('click', exportToCsv);
-document.getElementById('generate-warmup-btn')!.addEventListener('click', generateWarmup);
-
-
+document.getElementById('warmup-btn')!.addEventListener('click', generateWarmup);

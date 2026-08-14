@@ -12,6 +12,13 @@
 <body class="bg-zinc-950 text-zinc-100 min-h-screen">
     <div class="max-w-lg mx-auto p-6">
         <h1 class="text-4xl font-bold text-center mb-10">🏋️ Workout Tracker</h1>
+
+        <div class="text-center mb-6">
+            <button id="export-csv-btn" class="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl">
+                Export to CSV
+            </button>
+        </div>
+
         <!-- Current Workout -->
         <div class="section">
             <h2 class="text-2xl font-semibold mb-6">Today's Workout</h2>
@@ -23,6 +30,17 @@
                     id="exercise-name" 
                     class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg"
                     placeholder="Exercise name (e.g. Bench Press)" />
+                <select id="exercise-category"
+                        class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg">
+                    <option value="Chest">Chest</option>
+                    <option value="Back">Back</option>
+                    <option value="Legs">Legs</option>
+                    <option value="Shoulders">Shoulders</option>
+                    <option value="Arms">Arms</option>
+                    <option value="Core">Core</option>
+                    <option value="Cardio">Cardio</option>
+                    <option value="Other" selected>Other</option>
+                </select>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm text-zinc-400 mb-2">Reps</label>
@@ -64,30 +82,32 @@
                         class="w-full bg-emerald-600 hover:bg-emerald-500 py-5 rounded-2xl text-xl font-semibold transition">
                     Log Set
                 </button>
-                <button id="rest-btn"
-                        class="w-full bg-orange-600 hover:bg-orange-500 py-5 rounded-2xl text-lg font-semibold transition">
-                    Start Rest Timer (90s)
-                </button>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-zinc-400 mb-2">Rest (seconds)</label>
+                        <input 
+                            type="number" 
+                            id="rest-duration" 
+                            value="90" 
+                            min="5"
+                            step="5"
+                            class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-center text-lg" />
+                    </div>
+                    <div class="flex items-end">
+                        <button id="rest-btn"
+                                class="w-full bg-orange-600 hover:bg-orange-500 py-4 rounded-2xl text-lg font-semibold transition">
+                            Start Rest Timer
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <select id="exercise-category"
-        class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg">
-    <option value="Chest">Chest</option>
-    <option value="Back">Back</option>
-    <option value="Legs">Legs</option>
-    <option value="Shoulders">Shoulders</option>
-    <option value="Arms">Arms</option>
-    <option value="Core">Core</option>
-    <option value="Cardio">Cardio</option>
-    <option value="Other" selected>Other</option>
-</select>
-
-<!-- Body Part Focus -->
-<div class="section">
-    <h2 class="text-2xl font-semibold mb-4">Body Part Focus</h2>
-    <div id="category-focus"></div>
-</div>
+        <!-- Body Part Focus -->
+        <div class="section">
+            <h2 class="text-2xl font-semibold mb-4">Body Part Focus</h2>
+            <div id="category-focus"></div>
+        </div>
 
         <!-- 1RM Calculator -->
         <div class="section">
@@ -112,27 +132,27 @@
         </div>
 
         <!-- Warm-up Generator -->
-<div class="section">
-    <h2 class="text-2xl font-semibold mb-4">Warm-up Sets</h2>
-    <div class="grid grid-cols-2 gap-4 mb-4">
-        <input 
-            type="number" 
-            id="warmup-target" 
-            placeholder="Working weight (kg)"
-            class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-center text-lg" />
-        <input 
-            type="number" 
-            id="warmup-bar" 
-            value="20"
-            placeholder="Bar weight (kg)"
-            class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-center text-lg" />
-    </div>
-    <button id="warmup-btn"
-            class="w-full bg-zinc-800 hover:bg-zinc-700 py-4 rounded-2xl text-lg font-semibold transition mb-4">
-        Generate Warm-up
-    </button>
-    <div id="warmup-result" class="text-zinc-300"></div>
-</div>
+        <div class="section">
+            <h2 class="text-2xl font-semibold mb-4">Warm-up Sets</h2>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <input 
+                    type="number" 
+                    id="warmup-target" 
+                    placeholder="Working weight (kg)"
+                    class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-center text-lg" />
+                <input 
+                    type="number" 
+                    id="warmup-bar" 
+                    value="20"
+                    placeholder="Bar weight (kg)"
+                    class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-center text-lg" />
+            </div>
+            <button id="warmup-btn"
+                    class="w-full bg-zinc-800 hover:bg-zinc-700 py-4 rounded-2xl text-lg font-semibold transition mb-4">
+                Generate Warm-up
+            </button>
+            <div id="warmup-result" class="text-zinc-300"></div>
+        </div>
 
         <!-- Exercise Progress -->
         <div class="section">
@@ -189,16 +209,16 @@
         </div>
 
         <!-- Calendar -->
-<div class="section">
-    <h2 class="text-2xl font-semibold mb-4">Calendar</h2>
-    <div class="flex items-center justify-between mb-4">
-        <button id="cal-prev" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl">←</button>
-        <span id="cal-month-label" class="font-semibold text-lg"></span>
-        <button id="cal-next" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl">→</button>
-    </div>
-    <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
-    <div id="calendar-day-detail" class="mt-4 text-zinc-300"></div>
-</div>
+        <div class="section">
+            <h2 class="text-2xl font-semibold mb-4">Calendar</h2>
+            <div class="flex items-center justify-between mb-4">
+                <button id="prev-month" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl">←</button>
+                <span id="cal-month-label" class="font-semibold text-lg"></span>
+                <button id="next-month" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl">→</button>
+            </div>
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
+            <div id="calendar-day-detail" class="mt-4 text-zinc-300"></div>
+        </div>
 
         <!-- History -->
         <div class="section">
@@ -214,9 +234,4 @@
     </div>
     <script type="module" src="/src/main.ts"></script>
 </body>
-<div class="text-center mb-6">
-    <button id="export-csv-btn" class="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl">
-        Export to CSV
-    </button>
-</div>
 </html>
