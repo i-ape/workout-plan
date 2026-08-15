@@ -55,6 +55,7 @@ async function generateWarmup() {
 
 async function logSet() {
     const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
+    const categoryInput = document.getElementById('exercise-category') as HTMLSelectElement;
     const repsInput = document.getElementById('reps') as HTMLInputElement;
     const weightInput = document.getElementById('weight') as HTMLInputElement;
     const rpeInput = document.getElementById('rpe') as HTMLInputElement;
@@ -73,7 +74,7 @@ async function logSet() {
     const exercise: Exercise = {
         id: "",
         name,
-        category: "Other",
+        category: categoryInput.value,
         notes: notes || undefined,
     };
     const set: Set = {
@@ -91,6 +92,7 @@ async function logSet() {
         notesInput.value = '';
         loadCurrentWorkout();
         loadExerciseDropdown();
+        loadCategoryFocus();
     } catch (error) {
         showStatus(`❌ Failed to log set`, "red");
     }
