@@ -84,6 +84,7 @@ impl Calc {
 
         sets
     }
+
     // --- Progress & Trends ---
 
     /// Simple progress percentage.
@@ -99,6 +100,8 @@ impl Calc {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // --- 1RM Calculations ---
 
     #[test]
     fn epley_1rm_at_one_rep_equals_weight() {
@@ -121,6 +124,8 @@ mod tests {
         let result = Calc::calc_one_rm_brzycki(100.0, 5);
         assert!((result - 112.5).abs() < 0.01);
     }
+
+    // --- Volume Calculations ---
 
     #[test]
     fn volume_multiplies_weight_and_reps() {
@@ -148,6 +153,8 @@ mod tests {
         assert_eq!(Calc::calc_weekly_volume(&volumes), 0.0);
     }
 
+    // --- Best Set & Records ---
+
     #[test]
     fn best_set_picks_highest_volume() {
         let sets = vec![
@@ -166,21 +173,13 @@ mod tests {
         assert!(Calc::calc_best_set(&sets).is_none());
     }
 
+    // --- Training & Planning ---
+
     #[test]
     fn training_max_is_ninety_percent_rounded() {
         assert_eq!(Calc::calc_training_max(150.0), 135.0);
     }
 
-    #[test]
-    fn progress_percent_calculates_increase() {
-        let result = Calc::calc_progress_percent(110.0, 100.0);
-        assert!((result - 10.0).abs() < 0.01);
-    }
-
-    #[test]
-    fn progress_percent_previous_zero_returns_zero() {
-        assert_eq!(Calc::calc_progress_percent(50.0, 0.0), 0.0);
-    }
     #[test]
     fn warmup_sets_starts_with_bar() {
         let sets = Calc::calc_warmup_sets(100.0, 20.0);
@@ -199,5 +198,18 @@ mod tests {
         for i in 1..sets.len() {
             assert!(sets[i].0 >= sets[i - 1].0);
         }
+    }
+
+    // --- Progress & Trends ---
+
+    #[test]
+    fn progress_percent_calculates_increase() {
+        let result = Calc::calc_progress_percent(110.0, 100.0);
+        assert!((result - 10.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn progress_percent_previous_zero_returns_zero() {
+        assert_eq!(Calc::calc_progress_percent(50.0, 0.0), 0.0);
     }
 }
