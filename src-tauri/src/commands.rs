@@ -4,6 +4,8 @@ use crate::calc::Calc;
 use tauri::State;
 use std::sync::Mutex;
 
+// === Exercise & Workout CRUD ===
+
 #[tauri::command]
 pub fn get_all_exercises(state: State<'_, Mutex<Repository>>) -> Result<Vec<Exercise>, String> {
     let repo = state.lock().map_err(|e| e.to_string())?;
@@ -29,6 +31,18 @@ pub fn log_set(
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.log_set(exercise, set)
 }
+
+#[tauri::command]
+pub fn edit_set(
+    state: State<'_, Mutex<Repository>>,
+    exercise_name: String,
+    set_index: usize,
+    set: Set
+) -> Result<(), String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.edit_set(&exercise_name, set_index, set)
+}
+
 #[tauri::command]
 pub fn delete_set(
     state: State<'_, Mutex<Repository>>,
@@ -40,16 +54,18 @@ pub fn delete_set(
 }
 
 #[tauri::command]
-pub fn get_category_volume(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, f64)>, String> {
+pub fn get_current_workout(state: State<'_, Mutex<Repository>>) -> Result<Option<WorkoutSession>, String> {
     let repo = state.lock().map_err(|e| e.to_string())?;
-    repo.get_category_volume()
+    repo.get_current_workout()
 }
 
 #[tauri::command]
-pub fn get_last_trained_by_category(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, String)>, String> {
+pub fn get_workout_history(state: State<'_, Mutex<Repository>>) -> Result<Vec<WorkoutSession>, String> {
     let repo = state.lock().map_err(|e| e.to_string())?;
-    repo.get_last_trained_by_category()
+    repo.get_workout_history()
 }
+
+// === Calendar / Date-based Lookups ===
 
 #[tauri::command]
 pub fn get_workout_by_date(
@@ -68,27 +84,18 @@ pub fn get_workout_dates(state: State<'_, Mutex<Repository>>) -> Result<Vec<Stri
     repo.get_workout_dates()
 }
 
+// === Body Part Focus ===
+
 #[tauri::command]
-pub fn edit_set(
-    state: State<'_, Mutex<Repository>>,
-    exercise_name: String,
-    set_index: usize,
-    set: Set
-) -> Result<(), String> {
+pub fn get_category_volume(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, f64)>, String> {
     let repo = state.lock().map_err(|e| e.to_string())?;
-    repo.edit_set(&exercise_name, set_index, set)
+    repo.get_category_volume()
 }
 
 #[tauri::command]
-pub fn get_current_workout(state: State<'_, Mutex<Repository>>) -> Result<Option<WorkoutSession>, String> {
+pub fn get_last_trained_by_category(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, String)>, String> {
     let repo = state.lock().map_err(|e| e.to_string())?;
-    repo.get_current_workout()
-}
-
-#[tauri::command]
-pub fn get_workout_history(state: State<'_, Mutex<Repository>>) -> Result<Vec<WorkoutSession>, String> {
-    let repo = state.lock().map_err(|e| e.to_string())?;
-    repo.get_workout_history()
+    repo.get_last_trained_by_category()
 }
 
 // === Calculation Commands ===
@@ -96,6 +103,11 @@ pub fn get_workout_history(state: State<'_, Mutex<Repository>>) -> Result<Vec<Wo
 #[tauri::command]
 pub fn calc_1rm(weight: f64, reps: i32) -> Result<f64, String> {
     Ok(Calc::calc_one_rm_epley(weight, reps))
+}
+
+#[tauri::command]
+pub fn calc_1rm_brzycki(weight: f64, reps: i32) -> Result<f64, String> {
+    Ok(Calc::calc_one_rm_brzycki(weight, reps))
 }
 
 #[tauri::command]
@@ -109,13 +121,13 @@ pub fn calc_total_volume(sets: Vec<Set>) -> Result<f64, String> {
 }
 
 #[tauri::command]
-pub fn find_best_set(sets: Vec<Set>) -> Result<Option<Set>, String> {
-    Ok(Calc::calc_best_set(&sets).cloned())
+pub fn calc_weekly_volume(volumes: Vec<f64>) -> Result<f64, String> {
+    Ok(Calc::calc_weekly_volume(&volumes))
 }
 
 #[tauri::command]
-pub fn calc_1rm_brzycki(weight: f64, reps: i32) -> Result<f64, String> {
-    Ok(Calc::calc_one_rm_brzycki(weight, reps))
+pub fn find_best_set(sets: Vec<Set>) -> Result<Option<Set>, String> {
+    Ok(Calc::calc_best_set(&sets).cloned())
 }
 
 #[tauri::command]
@@ -129,14 +141,16 @@ pub fn suggest_weight_for_rpe(one_rm: f64, reps: i32, target_rpe: f64) -> Result
 }
 
 #[tauri::command]
-pub fn calc_weekly_volume(volumes: Vec<f64>) -> Result<f64, String> {
-    Ok(Calc::calc_weekly_volume(&volumes))
+pub fn calc_warmup_sets(working_weight: f64, bar_weight: f64) -> Result<Vec<(f64, i32)>, String> {
+    Ok(Calc::calc_warmup_sets(working_weight, bar_weight))
 }
 
 #[tauri::command]
 pub fn calc_progress_percent(current: f64, previous: f64) -> Result<f64, String> {
     Ok(Calc::calc_progress_percent(current, previous))
 }
+
+// === Records, Progress & Trends ===
 
 #[tauri::command]
 pub fn get_personal_records(state: State<'_, Mutex<Repository>>) -> Result<Vec<(String, Set)>, String> {
@@ -180,13 +194,10 @@ pub fn get_weekly_volume_trend(state: State<'_, Mutex<Repository>>) -> Result<Ve
     repo.get_weekly_volume_trend()
 }
 
+// === Export ===
+
 #[tauri::command]
 pub fn export_to_csv(state: State<'_, Mutex<Repository>>) -> Result<String, String> {
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.export_to_csv()
-}
-
-#[tauri::command]
-pub fn calc_warmup_sets(working_weight: f64, bar_weight: f64) -> Result<Vec<(f64, i32)>, String> {
-    Ok(Calc::calc_warmup_sets(working_weight, bar_weight))
 }
