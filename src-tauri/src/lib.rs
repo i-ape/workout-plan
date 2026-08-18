@@ -12,6 +12,7 @@ use tauri::Manager;
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -19,30 +20,37 @@ pub fn run() {
         .manage(Mutex::new(Repository::new()))
         .invoke_handler(tauri::generate_handler![
             greet,
+            // Exercise & Workout CRUD
             get_all_exercises,
             create_exercise,
             log_set,
+            edit_set,
+            delete_set,
             get_current_workout,
             get_workout_history,
+            // Calendar / Date-based lookups
+            get_workout_by_date,
+            get_workout_dates,
+            // Body Part Focus
+            get_category_volume,
+            get_last_trained_by_category,
+            // Calculation Commands
             calc_1rm,
+            calc_1rm_brzycki,
             calc_volume,
             calc_total_volume,
+            calc_weekly_volume,
             find_best_set,
-            calc_1rm_brzycki,
             calc_training_max,
             suggest_weight_for_rpe,
-            calc_weekly_volume,
+            calc_warmup_sets,
             calc_progress_percent,
+            // Records, Progress & Trends
             get_personal_records,
             get_exercise_progress,
             get_weekly_volume_trend,
-            delete_set,
-            edit_set,
-            get_workout_by_date,
-            get_workout_dates,
-            get_category_volume,
-            get_last_trained_by_category,
-            export_to_csv
+            // Export
+            export_to_csv,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]
