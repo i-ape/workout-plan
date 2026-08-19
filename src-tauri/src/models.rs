@@ -47,6 +47,7 @@ pub struct WorkoutSession {
     pub id: String,
     pub date: DateTime<Utc>,
     pub exercises: Vec<LoggedExercise>,
+    #[serde(default)]
     pub notes: Option<String>,
 }
 
@@ -58,5 +59,11 @@ impl WorkoutSession {
             exercises: vec![],
             notes: None,
         }
+    }
+}
+
+impl Default for WorkoutSession {
+    fn default() -> Self {
+        Self::new()
     }
 }
