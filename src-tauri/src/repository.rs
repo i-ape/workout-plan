@@ -45,10 +45,10 @@ impl Repository {
         }
     }
 
-    // === Existing methods ===
+    // === Exercises ===
     pub fn create_exercise(&self, ex: &mut Exercise) -> Result<(), String> {
         if ex.id.is_empty() {
-            ex.id = uuid::Uuid::new_v4().to_string();
+            *ex = Exercise::new(ex.name.clone(), ex.category.clone());
         }
         let mut data = self.data.lock().unwrap();
         data.exercises.push(ex.clone());
@@ -62,7 +62,7 @@ impl Repository {
         Ok(data.exercises.clone())
     }
 
-    // === Current Workout ===
+    // === Current Workout & Logging ===
     pub fn get_current_workout(&self) -> Result<Option<WorkoutSession>, String> {
         let data = self.data.lock().unwrap();
         let today = chrono::Utc::now().date_naive();
@@ -74,7 +74,6 @@ impl Repository {
         Ok(current)
     }
 
-    // === Logging ===
     pub fn log_set(&self, mut exercise: Exercise, set: Set) -> Result<(), String> {
         let mut data = self.data.lock().unwrap();
 
@@ -118,8 +117,7 @@ impl Repository {
         Ok(())
     }
 
-
-    // === Editing & Deleting ===
+    // === Editing & Deleting (today's workout only) ===
     pub fn delete_set(&self, exercise_name: &str, set_index: usize) -> Result<(), String> {
         let mut data = self.data.lock().unwrap();
         let today = chrono::Utc::now().date_naive();
@@ -171,7 +169,28 @@ impl Repository {
         Ok(())
     }
 
-    
+    // === Calendar / Date-based Lookups ===
+    pub fn get_workout_by_date(&self, date: chrono::NaiveDate) -> Result<Option<WorkoutSession>, String> {
+        let data = self.data.lock().unwrap();
+        let workout = data.workouts.iter()
+            .find(|w| w.date.date_naive() == date)
+            .cloned();
+        Ok(workout)
+    }
+
+    pub fn get_workout_dates(&self) -> Result<Vec<String>, String> {
+        let data = self.data.lock().unwrap();
+        let dates: Vec<String> = data.workouts.iter()
+            .map(|w| w.date.date_naive().to_string())
+            .collect();
+        Ok(dates)
+    }
+
+    pub fn get_workout_history(&self) -> Result<Vec<WorkoutSession>, String> {
+        let data = self.data.lock().unwrap();
+        Ok(data.workouts.clone())
+    }
+
     // === Exercise Progress ===
     pub fn get_exercise_progress(&self, exercise_name: &str) -> Result<Vec<(String, f64)>, String> {
         let data = self.data.lock().unwrap();
@@ -191,6 +210,30 @@ impl Repository {
         }
 
         Ok(progress)
+    }
+
+    // === Weekly Volume Trend ===
+    pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {
+        let data = self.data.lock().unwrap();
+        use std::collections::BTreeMap;
+
+        // BTreeMap keeps weeks in chronological order for free
+        let mut weekly: BTreeMap<(i32, u32), f64> = BTreeMap::new();
+
+        for workout in &data.workouts {
+            let iso = workout.date.iso_week();
+            let key = (iso.year(), iso.week());
+            let session_volume: f64 = workout.exercises.iter()
+                .map(|logged| Calc::calc_total_volume(&logged.sets))
+                .sum();
+            *weekly.entry(key).or_insert(0.0) += session_volume;
+        }
+
+        let result = weekly.into_iter()
+            .map(|((year, week), volume)| (format!("{}-W{:02}", year, week), volume))
+            .collect();
+
+        Ok(result)
     }
 
     // === Body Part Focus ===
@@ -256,51 +299,4 @@ impl Repository {
 
         Ok(csv)
     }
-
-    // === Calendar / Date-based lookups ===
-    pub fn get_workout_by_date(&self, date: chrono::NaiveDate) -> Result<Option<WorkoutSession>, String> {
-        let data = self.data.lock().unwrap();
-        let workout = data.workouts.iter()
-            .find(|w| w.date.date_naive() == date)
-            .cloned();
-        Ok(workout)
-    }
-
-    pub fn get_workout_dates(&self) -> Result<Vec<String>, String> {
-        let data = self.data.lock().unwrap();
-        let dates: Vec<String> = data.workouts.iter()
-            .map(|w| w.date.date_naive().to_string())
-            .collect();
-        Ok(dates)
-    }
-
-    // === Weekly Volume Trend ===
-    pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {
-        let data = self.data.lock().unwrap();
-        use std::collections::BTreeMap;
-
-        // BTreeMap keeps weeks in chronological order for free
-        let mut weekly: BTreeMap<(i32, u32), f64> = BTreeMap::new();
-
-        for workout in &data.workouts {
-            let iso = workout.date.iso_week();
-            let key = (iso.year(), iso.week());
-            let session_volume: f64 = workout.exercises.iter()
-                .map(|logged| Calc::calc_total_volume(&logged.sets))
-                .sum();
-            *weekly.entry(key).or_insert(0.0) += session_volume;
-        }
-
-        let result = weekly.into_iter()
-            .map(|((year, week), volume)| (format!("{}-W{:02}", year, week), volume))
-            .collect();
-
-        Ok(result)
-    }
-
-    pub fn get_workout_history(&self) -> Result<Vec<WorkoutSession>, String> {
-        let data = self.data.lock().unwrap();
-        Ok(data.workouts.clone())
-    }
 }
-
