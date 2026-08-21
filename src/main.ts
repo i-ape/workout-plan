@@ -533,6 +533,33 @@ async function loadCategoryFocus() {
     }
 }
 
+let knownExercises: Exercise[] = [];
+
+async function loadExerciseSuggestions() {
+    try {
+        knownExercises = await invoke('get_all_exercises') as Exercise[];
+        const datalist = document.getElementById('exercise-suggestions') as HTMLDataListElement;
+
+        const uniqueNames = Array.from(new Set(knownExercises.map(e => e.name))).sort();
+        datalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
+    } catch (error) {
+        console.error("Failed to load exercise suggestions:", error);
+    }
+}
+
+function autoFillCategory() {
+    const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
+    const categoryInput = document.getElementById('exercise-category') as HTMLSelectElement;
+
+    const match = knownExercises.find(
+        e => e.name.toLowerCase() === nameInput.value.trim().toLowerCase()
+    );
+
+    if (match) {
+        categoryInput.value = match.category;
+    }
+}
+
 async function showCalendarDay(date: string) {
     const detail = document.getElementById('calendar-day-detail') as HTMLDivElement;
     try {
@@ -603,3 +630,5 @@ document.getElementById('prev-month')!.addEventListener('click', () => changeCal
 document.getElementById('next-month')!.addEventListener('click', () => changeCalendarMonth(1));
 document.getElementById('export-csv-btn')!.addEventListener('click', exportToCsv);
 document.getElementById('warmup-btn')!.addEventListener('click', generateWarmup);
+document.getElementById('exercise-name')!.addEventListener('input', autoFillCategory);
+loadExerciseSuggestions();

@@ -212,6 +212,7 @@ impl Repository {
         Ok(progress)
     }
 
+
     // === Weekly Volume Trend ===
     pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {
         let data = self.data.lock().unwrap();
@@ -234,6 +235,28 @@ impl Repository {
             .collect();
 
         Ok(result)
+    }
+
+        pub fn create_routine(&self, name: &str, exercise_names: Vec<String>) -> Result<Routine, String> {
+        let routine = Routine::new(name, exercise_names);
+        let mut data = self.data.lock().unwrap();
+        data.routines.push(routine.clone());
+        drop(data);
+        self.save();
+        Ok(routine)
+    }
+
+    pub fn get_routines(&self) -> Result<Vec<Routine>, String> {
+        let data = self.data.lock().unwrap();
+        Ok(data.routines.clone())
+    }
+
+    pub fn delete_routine(&self, routine_id: &str) -> Result<(), String> {
+        let mut data = self.data.lock().unwrap();
+        data.routines.retain(|r| r.id != routine_id);
+        drop(data);
+        self.save();
+        Ok(())
     }
 
     // === Body Part Focus ===

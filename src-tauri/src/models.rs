@@ -23,6 +23,22 @@ impl Exercise {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Routine {
+    pub id: String,
+    pub name: String,
+    pub exercise_names: Vec<String>,
+}
+
+impl Routine {
+    pub fn new(name: impl Into<String>, exercise_names: Vec<String>) -> Self {
+        Self {
+            id: Uuid::new_v4().to_string(),
+            name: name.into(),
+            exercise_names,
+        }
+    }
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Set {
     pub reps: i32,
     pub weight: f64,
