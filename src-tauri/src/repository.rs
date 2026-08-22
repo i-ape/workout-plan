@@ -11,6 +11,8 @@ const DATA_FILE: &str = "exercise_data.json";
 pub struct AppData {
     pub exercises: Vec<Exercise>,
     pub workouts: Vec<WorkoutSession>,
+    #[serde(default)]
+    pub routines: Vec<Routine>,
 }
 
 pub struct Repository {
@@ -212,7 +214,6 @@ impl Repository {
         Ok(progress)
     }
 
-
     // === Weekly Volume Trend ===
     pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {
         let data = self.data.lock().unwrap();
@@ -237,7 +238,8 @@ impl Repository {
         Ok(result)
     }
 
-        pub fn create_routine(&self, name: &str, exercise_names: Vec<String>) -> Result<Routine, String> {
+    // === Routines ===
+    pub fn create_routine(&self, name: &str, exercise_names: Vec<String>) -> Result<Routine, String> {
         let routine = Routine::new(name, exercise_names);
         let mut data = self.data.lock().unwrap();
         data.routines.push(routine.clone());
