@@ -51,6 +51,10 @@ pub fn run() {
             get_weekly_volume_trend,
             // Export
             export_to_csv,
+            // Routines
+            create_routine,
+            get_routines,
+            delete_routine,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

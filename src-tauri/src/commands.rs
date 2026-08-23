@@ -201,3 +201,27 @@ pub fn export_to_csv(state: State<'_, Mutex<Repository>>) -> Result<String, Stri
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.export_to_csv()
 }
+
+// === Routines ===
+
+#[tauri::command]
+pub fn create_routine(
+    state: State<'_, Mutex<Repository>>,
+    name: String,
+    exercise_names: Vec<String>
+) -> Result<Routine, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.create_routine(&name, exercise_names)
+}
+
+#[tauri::command]
+pub fn get_routines(state: State<'_, Mutex<Repository>>) -> Result<Vec<Routine>, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.get_routines()
+}
+
+#[tauri::command]
+pub fn delete_routine(state: State<'_, Mutex<Repository>>, routine_id: String) -> Result<(), String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.delete_routine(&routine_id)
+}

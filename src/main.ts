@@ -23,6 +23,73 @@ interface WorkoutSession {
     }>;
 }
 
+interface Routine {
+    id: string;
+    name: string;
+    exerciseNames: string[];
+}
+
+async function loadRoutines() {
+    try {
+        const routines = await invoke('get_routines') as Routine[];
+        const select = document.getElementById('routine-select') as HTMLSelectElement;
+
+        select.innerHTML = '<option value="">Select a routine...</option>';
+        routines.forEach(r => {
+            const option = document.createElement('option');
+            option.value = r.id;
+            option.textContent = r.name;
+            option.dataset.exercises = JSON.stringify(r.exerciseNames);
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error("Failed to load routines:", error);
+    }
+}
+
+function previewRoutine() {
+    const select = document.getElementById('routine-select') as HTMLSelectElement;
+    const preview = document.getElementById('routine-preview') as HTMLDivElement;
+
+    const selected = select.options[select.selectedIndex];
+    if (!selected || !selected.value) {
+        preview.textContent = '';
+        return;
+    }
+
+    const exercises: string[] = JSON.parse(selected.dataset.exercises || '[]');
+    preview.textContent = exercises.join(' → ');
+
+    if (exercises.length > 0) {
+        const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
+        nameInput.value = exercises[0];
+        autoFillCategory();
+    }
+}
+
+async function saveRoutine() {
+    const nameInput = document.getElementById('new-routine-name') as HTMLInputElement;
+    const exercisesInput = document.getElementById('new-routine-exercises') as HTMLInputElement;
+
+    const name = nameInput.value.trim();
+    const exerciseNames = exercisesInput.value.split(',').map(s => s.trim()).filter(Boolean);
+
+    if (!name || exerciseNames.length === 0) {
+        showStatus("Enter a routine name and at least one exercise", "red");
+        return;
+    }
+
+    try {
+        await invoke('create_routine', { name, exerciseNames });
+        showStatus(`✅ Saved routine: ${name}`, "green");
+        nameInput.value = '';
+        exercisesInput.value = '';
+        loadRoutines();
+    } catch (error) {
+        showStatus("Failed to save routine", "red");
+    }
+}
+
 // Rest Timer
 let restInterval: number | null = null;
 let timeLeft = 90;
@@ -631,4 +698,6 @@ document.getElementById('next-month')!.addEventListener('click', () => changeCal
 document.getElementById('export-csv-btn')!.addEventListener('click', exportToCsv);
 document.getElementById('warmup-btn')!.addEventListener('click', generateWarmup);
 document.getElementById('exercise-name')!.addEventListener('input', autoFillCategory);
+document.getElementById('routine-select')!.addEventListener('change', previewRoutine);
+document.getElementById('save-routine-btn')!.addEventListener('click', saveRoutine);
 loadExerciseSuggestions();
