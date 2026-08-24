@@ -90,6 +90,26 @@ async function saveRoutine() {
     }
 }
 
+async function handleDeleteRoutine() {
+    const select = document.getElementById('routine-select') as HTMLSelectElement;
+    const routineId = select.value;
+    const routineName = select.options[select.selectedIndex]?.textContent;
+
+    if (!routineId) {
+        showStatus("Select a routine to delete first", "red");
+        return;
+    }
+
+    try {
+        await invoke('delete_routine', { routineId });
+        showStatus(`Deleted routine: ${routineName}`, "green");
+        loadRoutines();
+        (document.getElementById('routine-preview') as HTMLDivElement).textContent = '';
+    } catch (error) {
+        showStatus("Failed to delete routine", "red");
+    }
+}
+
 // Rest Timer
 let restInterval: number | null = null;
 let timeLeft = 90;
@@ -700,4 +720,5 @@ document.getElementById('warmup-btn')!.addEventListener('click', generateWarmup)
 document.getElementById('exercise-name')!.addEventListener('input', autoFillCategory);
 document.getElementById('routine-select')!.addEventListener('change', previewRoutine);
 document.getElementById('save-routine-btn')!.addEventListener('click', saveRoutine);
+document.getElementById('delete-routine-btn')!.addEventListener('click', handleDeleteRoutine);
 loadExerciseSuggestions();

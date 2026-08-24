@@ -108,20 +108,20 @@
             <h2 class="text-2xl font-semibold mb-4">Body Part Focus</h2>
             <div id="category-focus"></div>
         </div>
-        <!-- Routines -->
-         <input 
-    type="text" 
-    id="exercise-name" 
-    list="exercise-suggestions"
-    class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg"
-    placeholder="Exercise name (e.g. Bench Press)" />
-<datalist id="exercise-suggestions"></datalist>
+        
+    <!-- Routines -->
 <div class="section">
     <h2 class="text-2xl font-semibold mb-4">Routines</h2>
-    <select id="routine-select"
-            class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg mb-4">
-        <option value="">Select a routine...</option>
-    </select>
+    <div class="flex gap-2 mb-4">
+        <select id="routine-select"
+                class="flex-1 bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg">
+            <option value="">Select a routine...</option>
+        </select>
+        <button id="delete-routine-btn"
+                class="px-4 bg-red-800 hover:bg-red-700 rounded-2xl text-sm font-semibold transition">
+            Delete
+        </button>
+    </div>
     <div id="routine-preview" class="text-sm text-zinc-400 mb-4"></div>
 
     <div class="border-t border-zinc-800 pt-4 mt-4">
