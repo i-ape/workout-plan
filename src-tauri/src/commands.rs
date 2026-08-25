@@ -225,3 +225,14 @@ pub fn delete_routine(state: State<'_, Mutex<Repository>>, routine_id: String) -
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.delete_routine(&routine_id)
 }
+
+#[tauri::command]
+pub fn edit_routine(
+    state: State<'_, Mutex<Repository>>,
+    routine_id: String,
+    name: String,
+    exercise_names: Vec<String>
+) -> Result<Routine, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.edit_routine(&routine_id, &name, exercise_names)
+}

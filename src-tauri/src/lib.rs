@@ -55,6 +55,7 @@ pub fn run() {
             create_routine,
             get_routines,
             delete_routine,
+            edit_routine,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

@@ -67,9 +67,31 @@ function previewRoutine() {
     }
 }
 
+let editingRoutineId: string | null = null;
+
+function startEditRoutine() {
+    const select = document.getElementById('routine-select') as HTMLSelectElement;
+    const selected = select.options[select.selectedIndex];
+
+    if (!selected || !selected.value) {
+        showStatus("Select a routine to edit first", "red");
+        return;
+    }
+
+    const exercises: string[] = JSON.parse(selected.dataset.exercises || '[]');
+
+    editingRoutineId = selected.value;
+    (document.getElementById('new-routine-name') as HTMLInputElement).value = selected.textContent || '';
+    (document.getElementById('new-routine-exercises') as HTMLInputElement).value = exercises.join(', ');
+    (document.getElementById('routine-form-label') as HTMLParagraphElement).textContent = `Editing "${selected.textContent}"`;
+    (document.getElementById('save-routine-btn') as HTMLButtonElement).textContent = 'Update Routine';
+}
+
 async function saveRoutine() {
     const nameInput = document.getElementById('new-routine-name') as HTMLInputElement;
     const exercisesInput = document.getElementById('new-routine-exercises') as HTMLInputElement;
+    const label = document.getElementById('routine-form-label') as HTMLParagraphElement;
+    const saveBtn = document.getElementById('save-routine-btn') as HTMLButtonElement;
 
     const name = nameInput.value.trim();
     const exerciseNames = exercisesInput.value.split(',').map(s => s.trim()).filter(Boolean);
@@ -80,10 +102,19 @@ async function saveRoutine() {
     }
 
     try {
-        await invoke('create_routine', { name, exerciseNames });
-        showStatus(`✅ Saved routine: ${name}`, "green");
+        if (editingRoutineId) {
+            await invoke('edit_routine', { routineId: editingRoutineId, name, exerciseNames });
+            showStatus(`✅ Updated routine: ${name}`, "green");
+        } else {
+            await invoke('create_routine', { name, exerciseNames });
+            showStatus(`✅ Saved routine: ${name}`, "green");
+        }
+
+        editingRoutineId = null;
         nameInput.value = '';
         exercisesInput.value = '';
+        label.textContent = 'Create new routine';
+        saveBtn.textContent = 'Save Routine';
         loadRoutines();
     } catch (error) {
         showStatus("Failed to save routine", "red");
@@ -721,4 +752,5 @@ document.getElementById('exercise-name')!.addEventListener('input', autoFillCate
 document.getElementById('routine-select')!.addEventListener('change', previewRoutine);
 document.getElementById('save-routine-btn')!.addEventListener('click', saveRoutine);
 document.getElementById('delete-routine-btn')!.addEventListener('click', handleDeleteRoutine);
+document.getElementById('edit-routine-btn')!.addEventListener('click', startEditRoutine);
 loadExerciseSuggestions();

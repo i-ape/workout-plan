@@ -109,7 +109,7 @@
             <div id="category-focus"></div>
         </div>
         
-    <!-- Routines -->
+<!-- Routines -->
 <div class="section">
     <h2 class="text-2xl font-semibold mb-4">Routines</h2>
     <div class="flex gap-2 mb-4">
@@ -117,6 +117,10 @@
                 class="flex-1 bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg">
             <option value="">Select a routine...</option>
         </select>
+        <button id="edit-routine-btn"
+                class="px-4 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-sm font-semibold transition">
+            Edit
+        </button>
         <button id="delete-routine-btn"
                 class="px-4 bg-red-800 hover:bg-red-700 rounded-2xl text-sm font-semibold transition">
             Delete
@@ -125,7 +129,7 @@
     <div id="routine-preview" class="text-sm text-zinc-400 mb-4"></div>
 
     <div class="border-t border-zinc-800 pt-4 mt-4">
-        <p class="text-sm text-zinc-400 mb-2">Create new routine</p>
+        <p id="routine-form-label" class="text-sm text-zinc-400 mb-2">Create new routine</p>
         <input 
             type="text" 
             id="new-routine-name" 
@@ -142,7 +146,6 @@
         </button>
     </div>
 </div>
-
         <!-- 1RM Calculator -->
         <div class="section">
             <h2 class="text-2xl font-semibold mb-4">1RM Calculator</h2>

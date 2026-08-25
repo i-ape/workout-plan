@@ -261,6 +261,22 @@ impl Repository {
         Ok(())
     }
 
+        pub fn edit_routine(&self, routine_id: &str, name: &str, exercise_names: Vec<String>) -> Result<Routine, String> {
+        let mut data = self.data.lock().unwrap();
+
+        let routine = data.routines.iter_mut()
+            .find(|r| r.id == routine_id)
+            .ok_or("Routine not found")?;
+
+        routine.name = name.to_string();
+        routine.exercise_names = exercise_names;
+        let updated = routine.clone();
+
+        drop(data);
+        self.save();
+        Ok(updated)
+    }
+
     // === Body Part Focus ===
     pub fn get_category_volume(&self) -> Result<Vec<(String, f64)>, String> {
         let data = self.data.lock().unwrap();
