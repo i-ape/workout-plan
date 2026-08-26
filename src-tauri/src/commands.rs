@@ -193,8 +193,25 @@ pub fn get_weekly_volume_trend(state: State<'_, Mutex<Repository>>) -> Result<Ve
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.get_weekly_volume_trend()
 }
+// === Backup & Restore ===
 
-// === Export ===
+#[tauri::command]
+pub fn create_backup(state: State<'_, Mutex<Repository>>) -> Result<String, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.create_backup()
+}
+
+#[tauri::command]
+pub fn list_backups(state: State<'_, Mutex<Repository>>) -> Result<Vec<String>, String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.list_backups()
+}
+
+#[tauri::command]
+pub fn restore_backup(state: State<'_, Mutex<Repository>>, filename: String) -> Result<(), String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.restore_backup(&filename)
+}
 
 #[tauri::command]
 pub fn export_to_csv(state: State<'_, Mutex<Repository>>) -> Result<String, String> {

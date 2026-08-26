@@ -49,7 +49,10 @@ pub fn run() {
             get_personal_records,
             get_exercise_progress,
             get_weekly_volume_trend,
-            // Export
+            // Backup & Restore
+            create_backup,
+            list_backups,
+            restore_backup,
             export_to_csv,
             // Routines
             create_routine,

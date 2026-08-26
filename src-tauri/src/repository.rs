@@ -6,6 +6,7 @@ use chrono::Datelike;
 use crate::calc::Calc;
 
 const DATA_FILE: &str = "exercise_data.json";
+const BACKUP_DIR: &str = "backups";
 
 #[derive(Default, serde::Serialize, serde::Deserialize)]
 pub struct AppData {
@@ -26,6 +27,56 @@ fn escape_csv_field(field: &str) -> String {
         field.to_string()
     }
 }
+
+    // === Backup & Restore ===
+    pub fn create_backup(&self) -> Result<String, String> {
+        fs::create_dir_all(BACKUP_DIR).map_err(|e| e.to_string())?;
+
+        let timestamp = chrono::Utc::now().format("%Y-%m-%d_%H-%M-%S");
+        let backup_path = format!("{}/exercise_data_{}.json", BACKUP_DIR, timestamp);
+
+        let data = self.data.lock().unwrap();
+        let json = serde_json::to_string_pretty(&*data).map_err(|e| e.to_string())?;
+        drop(data);
+
+        fs::write(&backup_path, json).map_err(|e| e.to_string())?;
+        Ok(backup_path)
+    }
+
+    pub fn list_backups(&self) -> Result<Vec<String>, String> {
+        if !Path::new(BACKUP_DIR).exists() {
+            return Ok(vec![]);
+        }
+
+        let mut entries: Vec<String> = fs::read_dir(BACKUP_DIR)
+            .map_err(|e| e.to_string())?
+            .filter_map(|entry| entry.ok())
+            .filter_map(|entry| entry.file_name().into_string().ok())
+            .filter(|name| name.ends_with(".json"))
+            .collect();
+
+        entries.sort();
+        entries.reverse(); // most recent first
+        Ok(entries)
+    }
+
+    pub fn restore_backup(&self, filename: &str) -> Result<(), String> {
+        // Guard against path traversal - only allow bare filenames
+        if filename.contains('/') || filename.contains("..") {
+            return Err("Invalid backup filename".to_string());
+        }
+
+        let backup_path = format!("{}/{}", BACKUP_DIR, filename);
+        let content = fs::read_to_string(&backup_path).map_err(|e| e.to_string())?;
+        let restored: AppData = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+
+        let mut data = self.data.lock().unwrap();
+        *data = restored;
+        drop(data);
+
+        self.save();
+        Ok(())
+    }
 
 impl Repository {
     pub fn new() -> Self {

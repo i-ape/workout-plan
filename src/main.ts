@@ -703,6 +703,64 @@ function changeCalendarMonth(offset: number) {
     calendarViewDate = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + offset, 1);
     renderCalendar();
 }
+async function createBackup() {
+    try {
+        const path = await invoke('create_backup') as string;
+        showStatus(`✅ Backup created: ${path}`, "green");
+        loadBackupList();
+    } catch (error) {
+        showStatus("Failed to create backup", "red");
+    }
+}
+
+async function loadBackupList() {
+    try {
+        const backups = await invoke('list_backups') as string[];
+        const container = document.getElementById('backup-list') as HTMLDivElement;
+
+        if (backups.length === 0) {
+            container.innerHTML = '<p class="text-zinc-500">No backups yet.</p>';
+            return;
+        }
+
+        container.innerHTML = backups.map(filename => `
+            <div class="flex items-center justify-between bg-zinc-900 rounded-xl px-4 py-3">
+                <span class="text-zinc-400">${filename}</span>
+                <button class="restore-backup-btn text-xs px-3 py-1 bg-zinc-700 hover:bg-zinc-600 rounded-lg"
+                        data-filename="${filename}">
+                    Restore
+                </button>
+            </div>
+        `).join('');
+
+        container.querySelectorAll('.restore-backup-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const filename = (e.currentTarget as HTMLElement).dataset.filename!;
+                handleRestoreBackup(filename);
+            });
+        });
+    } catch (error) {
+        console.error("Failed to load backups:", error);
+    }
+}
+
+async function handleRestoreBackup(filename: string) {
+    const confirmed = confirm(`Restore from "${filename}"? This will overwrite your current data.`);
+    if (!confirmed) return;
+
+    try {
+        await invoke('restore_backup', { filename });
+        showStatus(`✅ Restored from ${filename}`, "green");
+        loadCurrentWorkout();
+        loadWeeklyTrend();
+        loadExerciseDropdown();
+        loadCategoryFocus();
+        renderCalendar();
+        loadRoutines();
+    } catch (error) {
+        showStatus("Failed to restore backup", "red");
+    }
+}
 
 async function exportToCsv() {
     try {
@@ -753,4 +811,6 @@ document.getElementById('routine-select')!.addEventListener('change', previewRou
 document.getElementById('save-routine-btn')!.addEventListener('click', saveRoutine);
 document.getElementById('delete-routine-btn')!.addEventListener('click', handleDeleteRoutine);
 document.getElementById('edit-routine-btn')!.addEventListener('click', startEditRoutine);
+document.getElementById('create-backup-btn')!.addEventListener('click', createBackup);
+loadBackupList();
 loadExerciseSuggestions();
