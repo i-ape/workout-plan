@@ -28,56 +28,6 @@ fn escape_csv_field(field: &str) -> String {
     }
 }
 
-    // === Backup & Restore ===
-    pub fn create_backup(&self) -> Result<String, String> {
-        fs::create_dir_all(BACKUP_DIR).map_err(|e| e.to_string())?;
-
-        let timestamp = chrono::Utc::now().format("%Y-%m-%d_%H-%M-%S");
-        let backup_path = format!("{}/exercise_data_{}.json", BACKUP_DIR, timestamp);
-
-        let data = self.data.lock().unwrap();
-        let json = serde_json::to_string_pretty(&*data).map_err(|e| e.to_string())?;
-        drop(data);
-
-        fs::write(&backup_path, json).map_err(|e| e.to_string())?;
-        Ok(backup_path)
-    }
-
-    pub fn list_backups(&self) -> Result<Vec<String>, String> {
-        if !Path::new(BACKUP_DIR).exists() {
-            return Ok(vec![]);
-        }
-
-        let mut entries: Vec<String> = fs::read_dir(BACKUP_DIR)
-            .map_err(|e| e.to_string())?
-            .filter_map(|entry| entry.ok())
-            .filter_map(|entry| entry.file_name().into_string().ok())
-            .filter(|name| name.ends_with(".json"))
-            .collect();
-
-        entries.sort();
-        entries.reverse(); // most recent first
-        Ok(entries)
-    }
-
-    pub fn restore_backup(&self, filename: &str) -> Result<(), String> {
-        // Guard against path traversal - only allow bare filenames
-        if filename.contains('/') || filename.contains("..") {
-            return Err("Invalid backup filename".to_string());
-        }
-
-        let backup_path = format!("{}/{}", BACKUP_DIR, filename);
-        let content = fs::read_to_string(&backup_path).map_err(|e| e.to_string())?;
-        let restored: AppData = serde_json::from_str(&content).map_err(|e| e.to_string())?;
-
-        let mut data = self.data.lock().unwrap();
-        *data = restored;
-        drop(data);
-
-        self.save();
-        Ok(())
-    }
-
 impl Repository {
     pub fn new() -> Self {
         let data = if Path::new(DATA_FILE).exists() {
@@ -93,9 +43,21 @@ impl Repository {
 
     fn save(&self) {
         let data = self.data.lock().unwrap();
-        if let Ok(json) = serde_json::to_string_pretty(&*data) {
-            let _ = fs::write(DATA_FILE, json);
+        let json = match serde_json::to_string_pretty(&*data) {
+            Ok(j) => j,
+            Err(_) => return, // don't touch the file if serialization somehow failed
+        };
+        drop(data);
+
+        let tmp_path = format!("{}.tmp", DATA_FILE);
+
+        if fs::write(&tmp_path, &json).is_err() {
+            return; // couldn't even write the temp file, bail without touching the real one
         }
+
+        // Rename is atomic on virtually all filesystems: readers see either
+        // the old complete file or the new complete file, never a partial one.
+        let _ = fs::rename(&tmp_path, DATA_FILE);
     }
 
     // === Exercises ===
@@ -312,7 +274,7 @@ impl Repository {
         Ok(())
     }
 
-        pub fn edit_routine(&self, routine_id: &str, name: &str, exercise_names: Vec<String>) -> Result<Routine, String> {
+    pub fn edit_routine(&self, routine_id: &str, name: &str, exercise_names: Vec<String>) -> Result<Routine, String> {
         let mut data = self.data.lock().unwrap();
 
         let routine = data.routines.iter_mut()
@@ -390,5 +352,55 @@ impl Repository {
         }
 
         Ok(csv)
+    }
+
+    // === Backup & Restore ===
+    pub fn create_backup(&self) -> Result<String, String> {
+        fs::create_dir_all(BACKUP_DIR).map_err(|e| e.to_string())?;
+
+        let timestamp = chrono::Utc::now().format("%Y-%m-%d_%H-%M-%S");
+        let backup_path = format!("{}/exercise_data_{}.json", BACKUP_DIR, timestamp);
+
+        let data = self.data.lock().unwrap();
+        let json = serde_json::to_string_pretty(&*data).map_err(|e| e.to_string())?;
+        drop(data);
+
+        fs::write(&backup_path, json).map_err(|e| e.to_string())?;
+        Ok(backup_path)
+    }
+
+    pub fn list_backups(&self) -> Result<Vec<String>, String> {
+        if !Path::new(BACKUP_DIR).exists() {
+            return Ok(vec![]);
+        }
+
+        let mut entries: Vec<String> = fs::read_dir(BACKUP_DIR)
+            .map_err(|e| e.to_string())?
+            .filter_map(|entry| entry.ok())
+            .filter_map(|entry| entry.file_name().into_string().ok())
+            .filter(|name| name.ends_with(".json"))
+            .collect();
+
+        entries.sort();
+        entries.reverse(); // most recent first
+        Ok(entries)
+    }
+
+    pub fn restore_backup(&self, filename: &str) -> Result<(), String> {
+        // Guard against path traversal - only allow bare filenames
+        if filename.contains('/') || filename.contains("..") {
+            return Err("Invalid backup filename".to_string());
+        }
+
+        let backup_path = format!("{}/{}", BACKUP_DIR, filename);
+        let content = fs::read_to_string(&backup_path).map_err(|e| e.to_string())?;
+        let restored: AppData = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+
+        let mut data = self.data.lock().unwrap();
+        *data = restored;
+        drop(data);
+
+        self.save();
+        Ok(())
     }
 }
