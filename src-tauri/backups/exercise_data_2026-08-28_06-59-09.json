@@ -1,0 +1,35 @@
+{
+  "exercises": [
+    {
+      "id": "bc1339d8-94e7-486c-bca6-58eab6c257df",
+      "name": "bench press",
+      "category": "Other",
+      "notes": null
+    }
+  ],
+  "workouts": [
+    {
+      "id": "dba98c5d-28e0-44db-9724-63991079dd3b",
+      "date": "2026-07-31T06:07:51.822634279Z",
+      "exercises": [
+        {
+          "exercise": {
+            "id": "bc1339d8-94e7-486c-bca6-58eab6c257df",
+            "name": "bench press",
+            "category": "Other",
+            "notes": null
+          },
+          "sets": [
+            {
+              "reps": 12,
+              "weight": 67.0,
+              "rpe": null
+            }
+          ]
+        }
+      ],
+      "notes": null
+    }
+  ],
+  "routines": []
+}
