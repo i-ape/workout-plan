@@ -29,7 +29,13 @@ fn escape_csv_field(field: &str) -> String {
 }
 
 impl Repository {
-    pub fn new() -> Self {
+        pub fn new() -> Self {
+        // Clean up any leftover temp file from a crash during a previous save
+        let tmp_path = format!("{}.tmp", DATA_FILE);
+        if Path::new(&tmp_path).exists() {
+            let _ = fs::remove_file(&tmp_path);
+        }
+
         let data = if Path::new(DATA_FILE).exists() {
             fs::read_to_string(DATA_FILE)
                 .ok()

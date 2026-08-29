@@ -5,12 +5,6 @@
       "name": "bench press",
       "category": "Other",
       "notes": null
-    },
-    {
-      "id": "3943bd3b-0f53-48d1-a155-aacd23b9aa0e",
-      "name": "rdl",
-      "category": "Legs",
-      "notes": null
     }
   ],
   "workouts": [
@@ -30,38 +24,6 @@
               "reps": 12,
               "weight": 67.0,
               "rpe": null
-            }
-          ]
-        }
-      ],
-      "notes": null
-    },
-    {
-      "id": "9ca6649f-dc5b-4c24-bd44-72ea5c245e52",
-      "date": "2026-08-28T06:59:42.162389588Z",
-      "exercises": [
-        {
-          "exercise": {
-            "id": "3943bd3b-0f53-48d1-a155-aacd23b9aa0e",
-            "name": "rdl",
-            "category": "Legs",
-            "notes": null
-          },
-          "sets": [
-            {
-              "reps": 8,
-              "weight": 80.0,
-              "rpe": 60.0
-            },
-            {
-              "reps": 8,
-              "weight": 85.5,
-              "rpe": 9.0
-            },
-            {
-              "reps": 8,
-              "weight": 91.0,
-              "rpe": 9.9
             }
           ]
         }
