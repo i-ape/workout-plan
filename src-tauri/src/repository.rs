@@ -233,7 +233,27 @@ impl Repository {
         Ok(progress)
     }
 
-    // === Weekly Volume Trend ===
+    // === history ===
+
+        // === Lifetime Stats ===
+    pub fn get_lifetime_stats(&self) -> Result<(i32, f64, i32), String> {
+        let data = self.data.lock().unwrap();
+
+        let mut total_sets = 0;
+        let mut total_volume = 0.0;
+
+        for workout in &data.workouts {
+            for logged in &workout.exercises {
+                total_sets += logged.sets.len() as i32;
+                total_volume += Calc::calc_total_volume(&logged.sets);
+            }
+        }
+
+        let total_workouts = data.workouts.len() as i32;
+
+        Ok((total_sets, total_volume, total_workouts))
+    }
+    
     pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {
         let data = self.data.lock().unwrap();
         use std::collections::BTreeMap;

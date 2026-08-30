@@ -497,6 +497,21 @@ async function loadExerciseDropdown() {
     }
 }
 
+async function loadLifetimeStats() {
+    try {
+        const [totalSets, totalVolume, totalWorkouts] = await invoke('get_lifetime_stats') as [number, number, number];
+        const container = document.getElementById('lifetime-stats') as HTMLDivElement;
+
+        container.innerHTML = `
+            <div><strong class="text-zinc-100 text-lg">${totalWorkouts}</strong><br>workouts</div>
+            <div><strong class="text-zinc-100 text-lg">${totalSets}</strong><br>sets</div>
+            <div><strong class="text-zinc-100 text-lg">${totalVolume.toFixed(0)}kg</strong><br>total volume</div>
+        `;
+    } catch (error) {
+        console.error("Failed to load lifetime stats:", error);
+    }
+}
+
 async function loadExerciseProgress() {
     const select = document.getElementById('progress-exercise-select') as HTMLSelectElement;
     const container = document.getElementById('exercise-progress-list') as HTMLDivElement;
@@ -812,5 +827,6 @@ document.getElementById('save-routine-btn')!.addEventListener('click', saveRouti
 document.getElementById('delete-routine-btn')!.addEventListener('click', handleDeleteRoutine);
 document.getElementById('edit-routine-btn')!.addEventListener('click', startEditRoutine);
 document.getElementById('create-backup-btn')!.addEventListener('click', createBackup);
+loadLifetimeStats();
 loadBackupList();
 loadExerciseSuggestions();

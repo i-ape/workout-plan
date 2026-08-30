@@ -193,6 +193,12 @@ pub fn get_weekly_volume_trend(state: State<'_, Mutex<Repository>>) -> Result<Ve
     let repo = state.lock().map_err(|e| e.to_string())?;
     repo.get_weekly_volume_trend()
 }
+
+#[tauri::command]
+pub fn get_lifetime_stats(state: State<'_, Mutex<Repository>>) -> Result<(i32, f64, i32), String> {
+    let repo = state.lock().map_err(|e| e.to_string())?;
+    repo.get_lifetime_stats()
+}
 // === Backup & Restore ===
 
 #[tauri::command]

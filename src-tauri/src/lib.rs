@@ -49,6 +49,7 @@ pub fn run() {
             get_personal_records,
             get_exercise_progress,
             get_weekly_volume_trend,
+            get_lifetime_stats,
             // Backup & Restore
             create_backup,
             list_backups,
