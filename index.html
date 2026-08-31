@@ -156,6 +156,29 @@
                 </button>
             </div>
         </div>
+        <div class="border-t border-zinc-800 pt-4 mt-4">
+    <p id="routine-form-label" class="text-sm text-zinc-400 mb-2">Create new routine</p>
+    <input 
+        type="text" 
+        id="new-routine-name" 
+        placeholder="Routine name (e.g. Push Day)"
+        class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg mb-3" />
+    <input 
+        type="text" 
+        id="new-routine-exercises" 
+        placeholder="Exercises, comma-separated (e.g. Bench Press, OHP, Triceps)"
+        class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-lg mb-3" />
+    <div class="flex gap-2">
+        <button id="save-routine-btn"
+                class="flex-1 bg-zinc-800 hover:bg-zinc-700 py-4 rounded-2xl text-lg font-semibold transition">
+            Save Routine
+        </button>
+        <button id="cancel-routine-edit-btn"
+                class="hidden px-6 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-lg font-semibold transition">
+            Cancel
+        </button>
+    </div>
+</div>
 
         <!-- 1RM Calculator -->
         <div class="section">

@@ -85,6 +85,16 @@ function startEditRoutine() {
     (document.getElementById('new-routine-exercises') as HTMLInputElement).value = exercises.join(', ');
     (document.getElementById('routine-form-label') as HTMLParagraphElement).textContent = `Editing "${selected.textContent}"`;
     (document.getElementById('save-routine-btn') as HTMLButtonElement).textContent = 'Update Routine';
+    (document.getElementById('cancel-routine-edit-btn') as HTMLButtonElement).classList.remove('hidden');
+}
+
+function cancelRoutineEdit() {
+    editingRoutineId = null;
+    (document.getElementById('new-routine-name') as HTMLInputElement).value = '';
+    (document.getElementById('new-routine-exercises') as HTMLInputElement).value = '';
+    (document.getElementById('routine-form-label') as HTMLParagraphElement).textContent = 'Create new routine';
+    (document.getElementById('save-routine-btn') as HTMLButtonElement).textContent = 'Save Routine';
+    (document.getElementById('cancel-routine-edit-btn') as HTMLButtonElement).classList.add('hidden');
 }
 
 async function saveRoutine() {
@@ -92,6 +102,7 @@ async function saveRoutine() {
     const exercisesInput = document.getElementById('new-routine-exercises') as HTMLInputElement;
     const label = document.getElementById('routine-form-label') as HTMLParagraphElement;
     const saveBtn = document.getElementById('save-routine-btn') as HTMLButtonElement;
+    const cancelBtn = document.getElementById('cancel-routine-edit-btn') as HTMLButtonElement;
 
     const name = nameInput.value.trim();
     const exerciseNames = exercisesInput.value.split(',').map(s => s.trim()).filter(Boolean);
@@ -115,6 +126,7 @@ async function saveRoutine() {
         exercisesInput.value = '';
         label.textContent = 'Create new routine';
         saveBtn.textContent = 'Save Routine';
+        cancelBtn.classList.add('hidden');
         loadRoutines();
     } catch (error) {
         showStatus("Failed to save routine", "red");
@@ -827,6 +839,7 @@ document.getElementById('save-routine-btn')!.addEventListener('click', saveRouti
 document.getElementById('delete-routine-btn')!.addEventListener('click', handleDeleteRoutine);
 document.getElementById('edit-routine-btn')!.addEventListener('click', startEditRoutine);
 document.getElementById('create-backup-btn')!.addEventListener('click', createBackup);
+document.getElementById('cancel-routine-edit-btn')!.addEventListener('click', cancelRoutineEdit);
 loadLifetimeStats();
 loadBackupList();
 loadExerciseSuggestions();
