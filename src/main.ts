@@ -143,6 +143,9 @@ async function handleDeleteRoutine() {
         return;
     }
 
+    const confirmed = confirm(`Delete routine "${routineName}"? This can't be undone.`);
+    if (!confirmed) return;
+
     try {
         await invoke('delete_routine', { routineId });
         showStatus(`Deleted routine: ${routineName}`, "green");
