@@ -388,27 +388,56 @@ function startRestTimer() {
     }, 1000);
 }
 
+let loadedHistory: WorkoutSession[] = [];
+
 async function loadHistory() {
     try {
-        const history = await invoke('get_workout_history') as WorkoutSession[];
-        const container = document.getElementById('history-list') as HTMLDivElement;
-        container.innerHTML = '';
-
-        if (history.length === 0) {
-            container.innerHTML = '<p>No past workouts yet.</p>';
-            return;
-        }
-
-        history.forEach(session => {
-            const div = document.createElement('div');
-            div.className = 'workout-session';
-            const date = new Date(session.date).toLocaleDateString();
-            div.innerHTML = `<strong>${date}</strong> — ${session.exercises.length} exercises`;
-            container.appendChild(div);
-        });
+        loadedHistory = await invoke('get_workout_history') as WorkoutSession[];
+        renderHistory();
     } catch (error) {
         showStatus(`Failed to load history`, "red");
     }
+}
+
+function renderHistory() {
+    const container = document.getElementById('history-list') as HTMLDivElement;
+    const filterInput = document.getElementById('history-filter') as HTMLInputElement;
+    const filter = filterInput.value.trim().toLowerCase();
+
+    container.innerHTML = '';
+
+    if (loadedHistory.length === 0) {
+        container.innerHTML = '<p>No past workouts yet.</p>';
+        return;
+    }
+
+    const filtered = filter
+        ? loadedHistory.filter(session =>
+            session.exercises.some(item => item.exercise.name.toLowerCase().includes(filter))
+          )
+        : loadedHistory;
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<p>No workouts matching "${filter}".</p>`;
+        return;
+    }
+
+    filtered.forEach(session => {
+        const div = document.createElement('div');
+        div.className = 'workout-session';
+        const date = new Date(session.date).toLocaleDateString();
+
+        // When filtering, only list the matching exercises for that session; otherwise show the count
+        const detail = filter
+            ? session.exercises
+                .filter(item => item.exercise.name.toLowerCase().includes(filter))
+                .map(item => item.exercise.name)
+                .join(', ')
+            : `${session.exercises.length} exercises`;
+
+        div.innerHTML = `<strong>${date}</strong> — ${detail}`;
+        container.appendChild(div);
+    });
 }
 
 async function loadPersonalRecords() {
@@ -843,6 +872,7 @@ document.getElementById('delete-routine-btn')!.addEventListener('click', handleD
 document.getElementById('edit-routine-btn')!.addEventListener('click', startEditRoutine);
 document.getElementById('create-backup-btn')!.addEventListener('click', createBackup);
 document.getElementById('cancel-routine-edit-btn')!.addEventListener('click', cancelRoutineEdit);
+document.getElementById('history-filter')!.addEventListener('input', renderHistory);
 loadLifetimeStats();
 loadBackupList();
 loadExerciseSuggestions();
