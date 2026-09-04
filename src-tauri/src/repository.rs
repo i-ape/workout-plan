@@ -412,7 +412,7 @@ impl Repository {
         Ok(entries)
     }
 
-    pub fn restore_backup(&self, filename: &str) -> Result<(), String> {
+        pub fn restore_backup(&self, filename: &str) -> Result<(), String> {
         // Guard against path traversal - only allow bare filenames
         if filename.contains('/') || filename.contains("..") {
             return Err("Invalid backup filename".to_string());
@@ -421,6 +421,9 @@ impl Repository {
         let backup_path = format!("{}/{}", BACKUP_DIR, filename);
         let content = fs::read_to_string(&backup_path).map_err(|e| e.to_string())?;
         let restored: AppData = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+
+        // Snapshot current state before overwriting, so a bad restore can itself be undone
+        let _ = self.create_backup();
 
         let mut data = self.data.lock().unwrap();
         *data = restored;
