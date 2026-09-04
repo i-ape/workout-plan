@@ -18,6 +18,8 @@ pub struct AppData {
 
 pub struct Repository {
     data: Mutex<AppData>,
+    data_file: String,
+    backup_dir: String,
 }
 
 fn escape_csv_field(field: &str) -> String {
@@ -29,22 +31,33 @@ fn escape_csv_field(field: &str) -> String {
 }
 
 impl Repository {
-        pub fn new() -> Self {
+    pub fn new() -> Self {
+        Self::new_at(DATA_FILE, BACKUP_DIR)
+    }
+
+    /// Used by tests (and available generally) to point at an isolated
+    /// data file / backup directory instead of the real ones.
+    pub fn new_at(data_file: &str, backup_dir: &str) -> Self {
         // Clean up any leftover temp file from a crash during a previous save
-        let tmp_path = format!("{}.tmp", DATA_FILE);
+        let tmp_path = format!("{}.tmp", data_file);
         if Path::new(&tmp_path).exists() {
             let _ = fs::remove_file(&tmp_path);
         }
 
-        let data = if Path::new(DATA_FILE).exists() {
-            fs::read_to_string(DATA_FILE)
+        let data = if Path::new(data_file).exists() {
+            fs::read_to_string(data_file)
                 .ok()
                 .and_then(|c| serde_json::from_str(&c).ok())
                 .unwrap_or_default()
         } else {
             AppData::default()
         };
-        Repository { data: Mutex::new(data) }
+
+        Repository {
+            data: Mutex::new(data),
+            data_file: data_file.to_string(),
+            backup_dir: backup_dir.to_string(),
+        }
     }
 
     fn save(&self) {
@@ -55,7 +68,7 @@ impl Repository {
         };
         drop(data);
 
-        let tmp_path = format!("{}.tmp", DATA_FILE);
+        let tmp_path = format!("{}.tmp", self.data_file);
 
         if fs::write(&tmp_path, &json).is_err() {
             return; // couldn't even write the temp file, bail without touching the real one
@@ -63,7 +76,7 @@ impl Repository {
 
         // Rename is atomic on virtually all filesystems: readers see either
         // the old complete file or the new complete file, never a partial one.
-        let _ = fs::rename(&tmp_path, DATA_FILE);
+        let _ = fs::rename(&tmp_path, &self.data_file);
     }
 
     // === Exercises ===
@@ -233,9 +246,7 @@ impl Repository {
         Ok(progress)
     }
 
-    // === history ===
-
-        // === Lifetime Stats ===
+    // === Lifetime Stats ===
     pub fn get_lifetime_stats(&self) -> Result<(i32, f64, i32), String> {
         let data = self.data.lock().unwrap();
 
@@ -253,7 +264,8 @@ impl Repository {
 
         Ok((total_sets, total_volume, total_workouts))
     }
-    
+
+    // === Weekly Volume Trend ===
     pub fn get_weekly_volume_trend(&self) -> Result<Vec<(String, f64)>, String> {
         let data = self.data.lock().unwrap();
         use std::collections::BTreeMap;
@@ -382,10 +394,10 @@ impl Repository {
 
     // === Backup & Restore ===
     pub fn create_backup(&self) -> Result<String, String> {
-        fs::create_dir_all(BACKUP_DIR).map_err(|e| e.to_string())?;
+        fs::create_dir_all(&self.backup_dir).map_err(|e| e.to_string())?;
 
         let timestamp = chrono::Utc::now().format("%Y-%m-%d_%H-%M-%S");
-        let backup_path = format!("{}/exercise_data_{}.json", BACKUP_DIR, timestamp);
+        let backup_path = format!("{}/exercise_data_{}.json", self.backup_dir, timestamp);
 
         let data = self.data.lock().unwrap();
         let json = serde_json::to_string_pretty(&*data).map_err(|e| e.to_string())?;
@@ -396,11 +408,11 @@ impl Repository {
     }
 
     pub fn list_backups(&self) -> Result<Vec<String>, String> {
-        if !Path::new(BACKUP_DIR).exists() {
+        if !Path::new(&self.backup_dir).exists() {
             return Ok(vec![]);
         }
 
-        let mut entries: Vec<String> = fs::read_dir(BACKUP_DIR)
+        let mut entries: Vec<String> = fs::read_dir(&self.backup_dir)
             .map_err(|e| e.to_string())?
             .filter_map(|entry| entry.ok())
             .filter_map(|entry| entry.file_name().into_string().ok())
@@ -412,13 +424,13 @@ impl Repository {
         Ok(entries)
     }
 
-        pub fn restore_backup(&self, filename: &str) -> Result<(), String> {
+    pub fn restore_backup(&self, filename: &str) -> Result<(), String> {
         // Guard against path traversal - only allow bare filenames
         if filename.contains('/') || filename.contains("..") {
             return Err("Invalid backup filename".to_string());
         }
 
-        let backup_path = format!("{}/{}", BACKUP_DIR, filename);
+        let backup_path = format!("{}/{}", self.backup_dir, filename);
         let content = fs::read_to_string(&backup_path).map_err(|e| e.to_string())?;
         let restored: AppData = serde_json::from_str(&content).map_err(|e| e.to_string())?;
 
@@ -431,5 +443,181 @@ impl Repository {
 
         self.save();
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Each test gets its own isolated data file/backup dir so tests never
+    // collide with each other or with your real exercise_data.json.
+    fn test_repo(test_name: &str) -> Repository {
+        let data_file = format!("test_data_{}.json", test_name);
+        let backup_dir = format!("test_backups_{}", test_name);
+        let _ = fs::remove_file(&data_file);
+        let _ = fs::remove_dir_all(&backup_dir);
+        Repository::new_at(&data_file, &backup_dir)
+    }
+
+    fn cleanup(test_name: &str) {
+        let _ = fs::remove_file(format!("test_data_{}.json", test_name));
+        let _ = fs::remove_file(format!("test_data_{}.json.tmp", test_name));
+        let _ = fs::remove_dir_all(format!("test_backups_{}", test_name));
+    }
+
+    #[test]
+    fn log_set_creates_new_exercise_and_workout() {
+        let repo = test_repo("log_new");
+        let exercise = Exercise::new("Bench Press", "Chest");
+        let set = Set::new(80.0, 8);
+
+        repo.log_set(exercise, set).unwrap();
+
+        let exercises = repo.get_all_exercises().unwrap();
+        assert_eq!(exercises.len(), 1);
+        assert_eq!(exercises[0].name, "Bench Press");
+
+        let workout = repo.get_current_workout().unwrap().unwrap();
+        assert_eq!(workout.exercises.len(), 1);
+        assert_eq!(workout.exercises[0].sets.len(), 1);
+
+        cleanup("log_new");
+    }
+
+    #[test]
+    fn log_set_upserts_existing_exercise_by_name_case_insensitive() {
+        let repo = test_repo("upsert");
+        repo.log_set(Exercise::new("Squat", "Legs"), Set::new(100.0, 5)).unwrap();
+        repo.log_set(Exercise::new("squat", "Legs"), Set::new(105.0, 5)).unwrap();
+
+        let exercises = repo.get_all_exercises().unwrap();
+        assert_eq!(exercises.len(), 1, "should not create a duplicate exercise for different casing");
+
+        let workout = repo.get_current_workout().unwrap().unwrap();
+        assert_eq!(workout.exercises.len(), 1);
+        assert_eq!(workout.exercises[0].sets.len(), 2, "both sets should land under the same exercise");
+
+        cleanup("upsert");
+    }
+
+    #[test]
+    fn delete_set_removes_exercise_when_last_set_removed() {
+        let repo = test_repo("delete_last");
+        repo.log_set(Exercise::new("Deadlift", "Back"), Set::new(120.0, 3)).unwrap();
+
+        repo.delete_set("Deadlift", 0).unwrap();
+
+        let workout = repo.get_current_workout().unwrap();
+        let has_deadlift = workout
+            .map(|w| w.exercises.iter().any(|e| e.exercise.name == "Deadlift"))
+            .unwrap_or(false);
+        assert!(!has_deadlift, "exercise should be removed once its only set is deleted");
+
+        cleanup("delete_last");
+    }
+
+    #[test]
+    fn delete_set_out_of_range_returns_error() {
+        let repo = test_repo("delete_oob");
+        repo.log_set(Exercise::new("Row", "Back"), Set::new(60.0, 10)).unwrap();
+
+        let result = repo.delete_set("Row", 5);
+        assert!(result.is_err());
+
+        cleanup("delete_oob");
+    }
+
+    #[test]
+    fn edit_set_updates_values_in_place() {
+        let repo = test_repo("edit_set");
+        repo.log_set(Exercise::new("OHP", "Shoulders"), Set::new(40.0, 6)).unwrap();
+
+        repo.edit_set("OHP", 0, Set::new(45.0, 5)).unwrap();
+
+        let workout = repo.get_current_workout().unwrap().unwrap();
+        let set = &workout.exercises[0].sets[0];
+        assert_eq!(set.weight, 45.0);
+        assert_eq!(set.reps, 5);
+
+        cleanup("edit_set");
+    }
+
+    #[test]
+    fn create_routine_and_get_routines_roundtrip() {
+        let repo = test_repo("routine_crud");
+        let routine = repo.create_routine("Push Day", vec!["Bench".into(), "OHP".into()]).unwrap();
+
+        let routines = repo.get_routines().unwrap();
+        assert_eq!(routines.len(), 1);
+        assert_eq!(routines[0].id, routine.id);
+        assert_eq!(routines[0].exercise_names, vec!["Bench", "OHP"]);
+
+        cleanup("routine_crud");
+    }
+
+    #[test]
+    fn edit_routine_updates_existing_by_id() {
+        let repo = test_repo("routine_edit");
+        let routine = repo.create_routine("Leg Day", vec!["Squat".into()]).unwrap();
+
+        repo.edit_routine(&routine.id, "Leg Day v2", vec!["Squat".into(), "Lunge".into()]).unwrap();
+
+        let routines = repo.get_routines().unwrap();
+        assert_eq!(routines.len(), 1, "editing should not create a duplicate");
+        assert_eq!(routines[0].name, "Leg Day v2");
+        assert_eq!(routines[0].exercise_names.len(), 2);
+
+        cleanup("routine_edit");
+    }
+
+    #[test]
+    fn edit_routine_missing_id_returns_error() {
+        let repo = test_repo("routine_edit_missing");
+        let result = repo.edit_routine("nonexistent-id", "X", vec![]);
+        assert!(result.is_err());
+
+        cleanup("routine_edit_missing");
+    }
+
+    #[test]
+    fn delete_routine_removes_it() {
+        let repo = test_repo("routine_delete");
+        let routine = repo.create_routine("Temp", vec!["X".into()]).unwrap();
+
+        repo.delete_routine(&routine.id).unwrap();
+
+        let routines = repo.get_routines().unwrap();
+        assert!(routines.is_empty());
+
+        cleanup("routine_delete");
+    }
+
+    #[test]
+    fn backup_and_restore_roundtrip() {
+        let repo = test_repo("backup_restore");
+        repo.log_set(Exercise::new("Curl", "Arms"), Set::new(15.0, 12)).unwrap();
+
+        let backup_path = repo.create_backup().unwrap();
+        let filename = Path::new(&backup_path).file_name().unwrap().to_str().unwrap().to_string();
+
+        // Change data after the backup
+        repo.log_set(Exercise::new("Curl", "Arms"), Set::new(17.5, 10)).unwrap();
+        assert_eq!(repo.get_current_workout().unwrap().unwrap().exercises[0].sets.len(), 2);
+
+        // Restore should bring it back to the 1-set state
+        repo.restore_backup(&filename).unwrap();
+        assert_eq!(repo.get_current_workout().unwrap().unwrap().exercises[0].sets.len(), 1);
+
+        cleanup("backup_restore");
+    }
+
+    #[test]
+    fn restore_backup_rejects_path_traversal() {
+        let repo = test_repo("path_traversal");
+        let result = repo.restore_backup("../../etc/passwd");
+        assert!(result.is_err());
+
+        cleanup("path_traversal");
     }
 }
