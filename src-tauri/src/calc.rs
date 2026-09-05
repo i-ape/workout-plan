@@ -200,6 +200,34 @@ mod tests {
         }
     }
 
+        #[test]
+    fn suggest_weight_at_target_rpe_ten_returns_full_weight() {
+        // reps=1 and rpe=10 should apply no reduction at all
+        let result = Calc::calc_suggest_weight(100.0, 1, 10.0);
+        assert!((result - 100.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn suggest_weight_decreases_with_more_reps() {
+        let fewer_reps = Calc::calc_suggest_weight(100.0, 1, 8.0);
+        let more_reps = Calc::calc_suggest_weight(100.0, 5, 8.0);
+        assert!(more_reps < fewer_reps, "higher rep targets should suggest a lighter weight");
+    }
+
+        #[test]
+    fn suggest_weight_increases_with_lower_target_rpe() {
+        let higher_rpe = Calc::calc_suggest_weight(100.0, 5, 9.0);
+        let lower_rpe = Calc::calc_suggest_weight(100.0, 5, 6.0);
+        assert!(lower_rpe > higher_rpe, "current formula: lower target RPE yields a higher rpe_factor, suggesting more weight");
+    }
+
+    #[test]
+    fn suggest_weight_never_goes_negative() {
+        // Extreme inputs shouldn't produce a nonsensical negative weight
+        let result = Calc::calc_suggest_weight(100.0, 50, 1.0);
+        assert!(result >= 0.0);
+    }
+
     // --- Progress & Trends ---
 
     #[test]
