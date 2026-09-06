@@ -813,9 +813,12 @@ async function handleRestoreBackup(filename: string) {
         loadCurrentWorkout();
         loadWeeklyTrend();
         loadExerciseDropdown();
+        loadExerciseSuggestions();
         loadCategoryFocus();
         renderCalendar();
         loadRoutines();
+        loadLifetimeStats();
+        loadBackupList();
     } catch (error) {
         showStatus("Failed to restore backup", "red");
     }
