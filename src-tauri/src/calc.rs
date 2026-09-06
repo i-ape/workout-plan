@@ -61,7 +61,7 @@ impl Calc {
     /// RPE-based weight suggestion.
     pub fn calc_suggest_weight(one_rm: f64, reps: i32, target_rpe: f64) -> f64 {
         let reps_factor = 1.0 - (reps as f64 - 1.0) * 0.02;
-        let rpe_factor = 1.0 - (target_rpe - 10.0) * 0.025;
+        let rpe_factor = 1.0 - (10.0 - target_rpe) * 0.025;
         (one_rm * reps_factor * rpe_factor).max(0.0)
     }
 
@@ -214,11 +214,11 @@ mod tests {
         assert!(more_reps < fewer_reps, "higher rep targets should suggest a lighter weight");
     }
 
-        #[test]
-    fn suggest_weight_increases_with_lower_target_rpe() {
+            #[test]
+    fn suggest_weight_decreases_with_lower_target_rpe() {
         let higher_rpe = Calc::calc_suggest_weight(100.0, 5, 9.0);
         let lower_rpe = Calc::calc_suggest_weight(100.0, 5, 6.0);
-        assert!(lower_rpe > higher_rpe, "current formula: lower target RPE yields a higher rpe_factor, suggesting more weight");
+        assert!(lower_rpe < higher_rpe, "a lower target RPE should suggest a lighter weight, matching real RPE convention");
     }
 
     #[test]
