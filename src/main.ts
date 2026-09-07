@@ -917,7 +917,6 @@ document.getElementById('edit-routine-btn')!.addEventListener('click', startEdit
 document.getElementById('create-backup-btn')!.addEventListener('click', createBackup);
 document.getElementById('cancel-routine-edit-btn')!.addEventListener('click', cancelRoutineEdit);
 document.getElementById('history-filter')!.addEventListener('input', renderHistory);
-document.getElementById('repeat-last-workout-btn')!.addEventListener('click', repeatLastWorkout);
-loadLifetimeStats();
+document.getElementById('repeat-last-btn')!.addEventListener('click', repeatLastWorkout);loadLifetimeStats();
 loadBackupList();
 loadExerciseSuggestions();
