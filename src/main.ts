@@ -225,7 +225,9 @@ async function logSet() {
         notesInput.value = '';
         loadCurrentWorkout();
         loadExerciseDropdown();
+        loadExerciseSuggestions();
         loadCategoryFocus();
+        loadLifetimeStats();
     } catch (error) {
         showStatus(`❌ Failed to log set`, "red");
     }
@@ -316,6 +318,8 @@ async function handleDeleteSet(exerciseName: string, index: number) {
         await invoke('delete_set', { exerciseName, setIndex: index });
         showStatus(`Deleted set from ${exerciseName}`, "green");
         loadCurrentWorkout();
+        loadCategoryFocus();
+        loadLifetimeStats();
     } catch (error) {
         showStatus("Failed to delete set", "red");
     }
@@ -350,6 +354,8 @@ async function handleEditSet(exerciseName: string, index: number, set: Set) {
         await invoke('edit_set', { exerciseName, setIndex: index, set });
         showStatus(`Updated set on ${exerciseName}`, "green");
         loadCurrentWorkout();
+        loadCategoryFocus();
+        loadLifetimeStats();
     } catch (error) {
         showStatus("Failed to update set", "red");
     }
@@ -438,6 +444,40 @@ function renderHistory() {
         div.innerHTML = `<strong>${date}</strong> — ${detail}`;
         container.appendChild(div);
     });
+}
+
+async function repeatLastWorkout() {
+    try {
+        const dates = await invoke('get_workout_dates') as string[];
+        if (dates.length === 0) {
+            showStatus("No past workouts to repeat", "red");
+            return;
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        const pastDates = dates.filter(d => d !== today).sort();
+        const lastDate = pastDates[pastDates.length - 1];
+
+        if (!lastDate) {
+            showStatus("No past workouts to repeat", "red");
+            return;
+        }
+
+        const workout = await invoke('get_workout_by_date', { date: lastDate }) as WorkoutSession | null;
+        if (!workout || workout.exercises.length === 0) {
+            showStatus("No exercises found in last workout", "red");
+            return;
+        }
+
+        const names = workout.exercises.map(item => item.exercise.name);
+        const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
+        nameInput.value = names[0];
+        autoFillCategory();
+
+        showStatus(`Loaded from ${lastDate}: ${names.join(' → ')}`, "green");
+    } catch (error) {
+        showStatus("Failed to repeat last workout", "red");
+    }
 }
 
 async function loadPersonalRecords() {
@@ -856,6 +896,7 @@ loadWeeklyTrend();
 loadExerciseDropdown();
 renderCalendar();
 loadCategoryFocus();
+loadRoutines();
 
 document.getElementById('log-btn')!.addEventListener('click', logSet);
 document.getElementById('rest-btn')!.addEventListener('click', startRestTimer);
@@ -876,6 +917,7 @@ document.getElementById('edit-routine-btn')!.addEventListener('click', startEdit
 document.getElementById('create-backup-btn')!.addEventListener('click', createBackup);
 document.getElementById('cancel-routine-edit-btn')!.addEventListener('click', cancelRoutineEdit);
 document.getElementById('history-filter')!.addEventListener('input', renderHistory);
+document.getElementById('repeat-last-workout-btn')!.addEventListener('click', repeatLastWorkout);
 loadLifetimeStats();
 loadBackupList();
 loadExerciseSuggestions();
