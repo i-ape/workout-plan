@@ -755,13 +755,43 @@ let knownExercises: Exercise[] = [];
 async function loadExerciseSuggestions() {
     try {
         knownExercises = await invoke('get_all_exercises') as Exercise[];
-        const datalist = document.getElementById('exercise-suggestions') as HTMLDataListElement;
-
-        const uniqueNames = Array.from(new Set(knownExercises.map(e => e.name))).sort();
-        datalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
     } catch (error) {
         console.error("Failed to load exercise suggestions:", error);
     }
+}
+
+function showExerciseSuggestions() {
+    const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
+    const list = document.getElementById('exercise-suggestions-list') as HTMLDivElement;
+    const query = nameInput.value.trim().toLowerCase();
+
+    if (!query) {
+        list.classList.add('hidden');
+        return;
+    }
+
+    const uniqueNames = Array.from(new Set(knownExercises.map(e => e.name)))
+        .filter(name => name.toLowerCase().includes(query))
+        .sort();
+
+    if (uniqueNames.length === 0) {
+        list.classList.add('hidden');
+        return;
+    }
+
+    list.innerHTML = uniqueNames
+        .map(name => `<div class="suggestion-item px-4 py-2 hover:bg-zinc-700 cursor-pointer" data-name="${name}">${name}</div>`)
+        .join('');
+    list.classList.remove('hidden');
+
+    list.querySelectorAll('.suggestion-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            const name = (e.currentTarget as HTMLElement).dataset.name!;
+            nameInput.value = name;
+            list.classList.add('hidden');
+            autoFillCategory();
+        });
+    });
 }
 
 function autoFillCategory() {
@@ -776,6 +806,8 @@ function autoFillCategory() {
         categoryInput.value = match.category;
     }
 }
+
+
 
 async function showCalendarDay(date: string) {
     const detail = document.getElementById('calendar-day-detail') as HTMLDivElement;
@@ -918,5 +950,7 @@ document.getElementById('create-backup-btn')!.addEventListener('click', createBa
 document.getElementById('cancel-routine-edit-btn')!.addEventListener('click', cancelRoutineEdit);
 document.getElementById('history-filter')!.addEventListener('input', renderHistory);
 document.getElementById('repeat-last-btn')!.addEventListener('click', repeatLastWorkout);loadLifetimeStats();
+document.getElementById('exercise-suggestions').innerHTML
+document.getElementById('exercise-name')!.addEventListener('input', showExerciseSuggestions);
 loadBackupList();
 loadExerciseSuggestions();

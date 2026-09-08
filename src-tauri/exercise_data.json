@@ -31,5 +31,13 @@
       "notes": null
     }
   ],
-  "routines": []
+  "routines": [
+    {
+      "id": "01536279-37cd-4c69-baef-2ec8fa9abb3e",
+      "name": "leg",
+      "exercise_names": [
+        "rdl squat calf hamstring"
+      ]
+    }
+  ]
 }
