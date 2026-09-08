@@ -941,7 +941,7 @@ document.getElementById('prev-month')!.addEventListener('click', () => changeCal
 document.getElementById('next-month')!.addEventListener('click', () => changeCalendarMonth(1));
 document.getElementById('export-csv-btn')!.addEventListener('click', exportToCsv);
 document.getElementById('warmup-btn')!.addEventListener('click', generateWarmup);
-document.getElementById('exercise-name')!.addEventListener('input', autoFillCategory);
+document.getElementById('exercise-name')!.addEventListener('input', showExerciseSuggestions);
 document.getElementById('routine-select')!.addEventListener('change', previewRoutine);
 document.getElementById('save-routine-btn')!.addEventListener('click', saveRoutine);
 document.getElementById('delete-routine-btn')!.addEventListener('click', handleDeleteRoutine);
@@ -949,8 +949,16 @@ document.getElementById('edit-routine-btn')!.addEventListener('click', startEdit
 document.getElementById('create-backup-btn')!.addEventListener('click', createBackup);
 document.getElementById('cancel-routine-edit-btn')!.addEventListener('click', cancelRoutineEdit);
 document.getElementById('history-filter')!.addEventListener('input', renderHistory);
-document.getElementById('repeat-last-btn')!.addEventListener('click', repeatLastWorkout);loadLifetimeStats();
-document.getElementById('exercise-suggestions').innerHTML
-document.getElementById('exercise-name')!.addEventListener('input', showExerciseSuggestions);
+document.getElementById('repeat-last-btn')!.addEventListener('click', repeatLastWorkout);
+
+document.addEventListener('click', (e) => {
+    const list = document.getElementById('exercise-suggestions-list') as HTMLDivElement;
+    const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
+    if (e.target !== nameInput && !list.contains(e.target as Node)) {
+        list.classList.add('hidden');
+    }
+});
+
+loadLifetimeStats();
 loadBackupList();
 loadExerciseSuggestions();
