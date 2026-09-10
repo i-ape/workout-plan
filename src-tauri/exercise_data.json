@@ -29,6 +29,28 @@
         }
       ],
       "notes": null
+    },
+    {
+      "id": "17ac27b8-d1a4-4a9f-84e8-870c3bbaf528",
+      "date": "2026-09-10T00:55:30.815711659Z",
+      "exercises": [
+        {
+          "exercise": {
+            "id": "bc1339d8-94e7-486c-bca6-58eab6c257df",
+            "name": "bench press",
+            "category": "Chest",
+            "notes": null
+          },
+          "sets": [
+            {
+              "reps": 8,
+              "weight": 80.0,
+              "rpe": null
+            }
+          ]
+        }
+      ],
+      "notes": null
     }
   ],
   "routines": [

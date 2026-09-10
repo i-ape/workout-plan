@@ -469,9 +469,38 @@ async function repeatLastWorkout() {
             return;
         }
 
+        const firstItem = workout.exercises[0];
+        const lastSet = firstItem.sets[firstItem.sets.length - 1];
         const names = workout.exercises.map(item => item.exercise.name);
+
+        // Let the person confirm or adjust reps/weight before anything is filled in
+        const repsInput = prompt(
+            `Repeat "${firstItem.exercise.name}" — reps:`,
+            lastSet.reps.toString()
+        );
+        if (repsInput === null) return; // cancelled
+
+        const weightInput = prompt(
+            `Repeat "${firstItem.exercise.name}" — weight (kg):`,
+            lastSet.weight.toString()
+        );
+        if (weightInput === null) return; // cancelled
+
+        const reps = parseInt(repsInput);
+        const weight = parseFloat(weightInput);
+
+        if (isNaN(reps) || isNaN(weight)) {
+            showStatus("Invalid reps or weight", "red");
+            return;
+        }
+
         const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
-        nameInput.value = names[0];
+        const repsField = document.getElementById('reps') as HTMLInputElement;
+        const weightField = document.getElementById('weight') as HTMLInputElement;
+
+        nameInput.value = firstItem.exercise.name;
+        repsField.value = reps.toString();
+        weightField.value = weight.toString();
         autoFillCategory();
 
         showStatus(`Loaded from ${lastDate}: ${names.join(' → ')}`, "green");
