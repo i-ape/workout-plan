@@ -97,6 +97,26 @@ function cancelRoutineEdit() {
     (document.getElementById('cancel-routine-edit-btn') as HTMLButtonElement).classList.add('hidden');
 }
 
+function clearForm() {
+    const nameInput = document.getElementById('exercise-name') as HTMLInputElement;
+    const categoryInput = document.getElementById('exercise-category') as HTMLSelectElement;
+    const repsInput = document.getElementById('reps') as HTMLInputElement;
+    const weightInput = document.getElementById('weight') as HTMLInputElement;
+    const rpeInput = document.getElementById('rpe') as HTMLInputElement;
+    const notesInput = document.getElementById('exercise-notes') as HTMLInputElement;
+    const suggestionsList = document.getElementById('exercise-suggestions-list') as HTMLDivElement;
+
+    nameInput.value = '';
+    categoryInput.value = 'Other';
+    repsInput.value = '8';
+    weightInput.value = '80';
+    rpeInput.value = '';
+    notesInput.value = '';
+    suggestionsList.classList.add('hidden');
+
+    showStatus('Form cleared', 'white');
+}
+
 async function saveRoutine() {
     const nameInput = document.getElementById('new-routine-name') as HTMLInputElement;
     const exercisesInput = document.getElementById('new-routine-exercises') as HTMLInputElement;
@@ -979,6 +999,7 @@ document.getElementById('create-backup-btn')!.addEventListener('click', createBa
 document.getElementById('cancel-routine-edit-btn')!.addEventListener('click', cancelRoutineEdit);
 document.getElementById('history-filter')!.addEventListener('input', renderHistory);
 document.getElementById('repeat-last-btn')!.addEventListener('click', repeatLastWorkout);
+document.getElementById('clear-form-btn')!.addEventListener('click', clearForm);
 
 document.addEventListener('click', (e) => {
     const list = document.getElementById('exercise-suggestions-list') as HTMLDivElement;

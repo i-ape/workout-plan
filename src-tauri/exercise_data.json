@@ -46,6 +46,11 @@
               "reps": 8,
               "weight": 80.0,
               "rpe": null
+            },
+            {
+              "reps": 13,
+              "weight": 70.0,
+              "rpe": null
             }
           ]
         }
