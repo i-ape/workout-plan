@@ -620,4 +620,145 @@ mod tests {
 
         cleanup("path_traversal");
     }
+        #[test]
+    fn exercise_progress_returns_one_rm_per_session() {
+        let repo = test_repo("progress");
+        repo.log_set(Exercise::new("Bench", "Chest"), Set::new(80.0, 5)).unwrap();
+        repo.log_set(Exercise::new("Bench", "Chest"), Set::new(90.0, 3)).unwrap();
+
+        let progress = repo.get_exercise_progress("Bench").unwrap();
+
+        // Both sets landed in today's single session, so best_set picks the
+        // higher-volume one (90x3=270 vs 80x5=400) -> actually 80x5 wins on volume
+        assert_eq!(progress.len(), 1, "same-day sets collapse into one session entry");
+        assert!(progress[0].1 > 0.0);
+
+        cleanup("progress");
+    }
+
+    #[test]
+    fn exercise_progress_case_insensitive_and_empty_for_unknown() {
+        let repo = test_repo("progress_case");
+        repo.log_set(Exercise::new("Deadlift", "Back"), Set::new(140.0, 3)).unwrap();
+
+        let progress_upper = repo.get_exercise_progress("DEADLIFT").unwrap();
+        assert_eq!(progress_upper.len(), 1, "lookup should be case-insensitive");
+
+        let progress_missing = repo.get_exercise_progress("Nonexistent").unwrap();
+        assert!(progress_missing.is_empty());
+
+        cleanup("progress_case");
+    }
+
+    #[test]
+    fn weekly_volume_trend_sums_same_week_sessions() {
+        let repo = test_repo("weekly_trend");
+        repo.log_set(Exercise::new("Row", "Back"), Set::new(50.0, 10)).unwrap(); // 500
+        repo.log_set(Exercise::new("Row", "Back"), Set::new(60.0, 5)).unwrap();  // 300
+
+        let trend = repo.get_weekly_volume_trend().unwrap();
+
+        assert_eq!(trend.len(), 1, "same-day sets fall in the same ISO week");
+        assert_eq!(trend[0].1, 800.0);
+
+        cleanup("weekly_trend");
+    }
+
+    #[test]
+    fn weekly_volume_trend_empty_when_no_history() {
+        let repo = test_repo("weekly_trend_empty");
+        let trend = repo.get_weekly_volume_trend().unwrap();
+        assert!(trend.is_empty());
+
+        cleanup("weekly_trend_empty");
+    }
+
+    #[test]
+    fn category_volume_groups_and_sorts_descending() {
+        let repo = test_repo("category_volume");
+        repo.log_set(Exercise::new("Squat", "Legs"), Set::new(100.0, 5)).unwrap();   // 500
+        repo.log_set(Exercise::new("Curl", "Arms"), Set::new(15.0, 10)).unwrap();    // 150
+        repo.log_set(Exercise::new("Lunge", "Legs"), Set::new(40.0, 8)).unwrap();    // 320
+
+        let volumes = repo.get_category_volume().unwrap();
+
+        assert_eq!(volumes.len(), 2);
+        assert_eq!(volumes[0].0, "Legs", "highest total volume should sort first");
+        assert_eq!(volumes[0].1, 820.0);
+        assert_eq!(volumes[1].0, "Arms");
+        assert_eq!(volumes[1].1, 150.0);
+
+        cleanup("category_volume");
+    }
+
+    #[test]
+    fn last_trained_by_category_reports_most_recent_date() {
+        let repo = test_repo("last_trained");
+        repo.log_set(Exercise::new("Bench", "Chest"), Set::new(80.0, 5)).unwrap();
+
+        let last_trained = repo.get_last_trained_by_category().unwrap();
+
+        assert_eq!(last_trained.len(), 1);
+        assert_eq!(last_trained[0].0, "Chest");
+        // Just confirm it's a well-formed date string, not the exact value
+        // (that depends on when the test runs)
+        assert_eq!(last_trained[0].1.len(), 10, "should be YYYY-MM-DD");
+
+        cleanup("last_trained");
+    }
+
+    #[test]
+    fn export_to_csv_includes_header_and_rows() {
+        let repo = test_repo("csv_basic");
+        repo.log_set(Exercise::new("Bench Press", "Chest"), Set::new(80.0, 5)).unwrap();
+
+        let csv = repo.export_to_csv().unwrap();
+
+        assert!(csv.starts_with("date,exercise,category,reps,weight,rpe\n"));
+        assert!(csv.contains("Bench Press"));
+        assert!(csv.contains("Chest"));
+        assert!(csv.contains("80"));
+        assert!(csv.contains("5"));
+
+        cleanup("csv_basic");
+    }
+
+    #[test]
+    fn export_to_csv_escapes_commas_in_exercise_name() {
+        let repo = test_repo("csv_escape");
+        repo.log_set(Exercise::new("Squat, high bar", "Legs"), Set::new(100.0, 5)).unwrap();
+
+        let csv = repo.export_to_csv().unwrap();
+
+        assert!(
+            csv.contains("\"Squat, high bar\""),
+            "a name containing a comma must be quoted per CSV rules"
+        );
+
+        cleanup("csv_escape");
+    }
+
+    #[test]
+    fn export_to_csv_escapes_quotes_in_exercise_name() {
+        let repo = test_repo("csv_escape_quote");
+        repo.log_set(Exercise::new(r#"36" box jump"#, "Legs"), Set::new(0.0, 5)).unwrap();
+
+        let csv = repo.export_to_csv().unwrap();
+
+        assert!(
+            csv.contains(r#""36"" box jump""#),
+            "an embedded quote must be doubled and the whole field quoted"
+        );
+
+        cleanup("csv_escape_quote");
+    }
+
+    #[test]
+    fn export_to_csv_empty_history_is_just_header() {
+        let repo = test_repo("csv_empty");
+        let csv = repo.export_to_csv().unwrap();
+        assert_eq!(csv, "date,exercise,category,reps,weight,rpe\n");
+
+        cleanup("csv_empty");
+    }
 }

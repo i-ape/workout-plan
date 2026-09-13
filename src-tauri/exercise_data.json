@@ -56,6 +56,43 @@
         }
       ],
       "notes": null
+    },
+    {
+      "id": "7e212a17-d599-438d-9d7f-8d82d71c3668",
+      "date": "2026-09-13T16:48:55.306722433Z",
+      "exercises": [
+        {
+          "exercise": {
+            "id": "bc1339d8-94e7-486c-bca6-58eab6c257df",
+            "name": "bench press",
+            "category": "Other",
+            "notes": null
+          },
+          "sets": [
+            {
+              "reps": 13,
+              "weight": 90.0,
+              "rpe": null
+            },
+            {
+              "reps": 13,
+              "weight": 91.0,
+              "rpe": null
+            },
+            {
+              "reps": 13,
+              "weight": 92.0,
+              "rpe": null
+            },
+            {
+              "reps": 13,
+              "weight": 93.0,
+              "rpe": null
+            }
+          ]
+        }
+      ],
+      "notes": null
     }
   ],
   "routines": [
